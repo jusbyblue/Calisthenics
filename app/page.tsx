@@ -701,55 +701,103 @@ export default function Dashboard() {
           <CardLabel>Mastery Paths</CardLabel>
           
           {/* Legs */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📕</span> Leg Mastery
-            </span>
-            <span className="font-extrabold text-accent text-xs">{pathStats.legs.mastered} / {pathStats.legs.total} • {legsAvg}%</span>
+          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className="text-white text-xs font-bold flex items-center gap-2">
+                <span>📕</span> Leg Mastery
+              </span>
+              <span className="font-extrabold text-accent text-xs">{legsAvg}%</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              <span>{pathStats.legs.mastered} / {pathStats.legs.total} Mastered</span>
+              <span className="flex items-center gap-0.5">Tap to Open →</span>
+            </div>
           </div>
 
           {/* Push */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📘</span> Push Mastery
-            </span>
-            <span className="font-extrabold text-accent text-xs">{pathStats.push.mastered} / {pathStats.push.total} • {pushAvg}%</span>
+          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className="text-white text-xs font-bold flex items-center gap-2">
+                <span>📘</span> Push Mastery
+              </span>
+              <span className="font-extrabold text-accent text-xs">{pushAvg}%</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              <span>{pathStats.push.mastered} / {pathStats.push.total} Mastered</span>
+              <span className="flex items-center gap-0.5">Tap to Open →</span>
+            </div>
           </div>
 
           {/* Pull */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📙</span> Pull Mastery
-            </span>
-            <span className="font-extrabold text-accent text-xs">{pathStats.pull.mastered} / {pathStats.pull.total} • {pullAvg}%</span>
+          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className="text-white text-xs font-bold flex items-center gap-2">
+                <span>📙</span> Pull Mastery
+              </span>
+              <span className="font-extrabold text-accent text-xs">{pullAvg}%</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              <span>{pathStats.pull.mastered} / {pathStats.pull.total} Mastered</span>
+              <span className="flex items-center gap-0.5">Tap to Open →</span>
+            </div>
           </div>
 
           {/* Core */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📗</span> Core Mastery
-            </span>
-            <span className="font-extrabold text-accent text-xs">{pathStats.core.mastered} / {pathStats.core.total} • {coreAvg}%</span>
+          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className="text-white text-xs font-bold flex items-center gap-2">
+                <span>📗</span> Core Mastery
+              </span>
+              <span className="font-extrabold text-accent text-xs">{coreAvg}%</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              <span>{pathStats.core.mastered} / {pathStats.core.total} Mastered</span>
+              <span className="flex items-center gap-0.5">Tap to Open →</span>
+            </div>
           </div>
 
           {/* Skills */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📕</span> Skills & Balance
-            </span>
-            <span className={skillsLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-              {skillsLocked ? "Locked" : `${pathStats.skills.mastered} / {pathStats.skills.total} • ${skillsAvg}%`}
-            </span>
+          <div className={skillsLocked ? "flex flex-col gap-1.5 bg-surface2/10 px-4 py-3 border border-border/10 rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer"} onClick={skillsLocked ? undefined : () => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className={skillsLocked ? "text-secondary/70 text-xs font-bold flex items-center gap-2" : "text-white text-xs font-bold flex items-center gap-2"}>
+                <span>📕</span> Skills & Balance
+              </span>
+              <span className={skillsLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
+                {skillsLocked ? "🔒 Locked" : `${skillsAvg}%`}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              {skillsLocked ? (
+                <span className="text-secondary/60">Complete Base Books (Avg &ge; 60%)</span>
+              ) : (
+                <>
+                  <span>{pathStats.skills.mastered} / {pathStats.skills.total} Mastered</span>
+                  <span className="flex items-center gap-0.5">Tap to Open →</span>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Elite */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
-            <span className="text-white text-xs font-semibold flex items-center gap-2">
-              <span>📘</span> Elite Skills
-            </span>
-            <span className={eliteLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-              {eliteLocked ? "Locked" : `${pathStats.elite.mastered} / {pathStats.elite.total} • ${eliteAvg}%`}
-            </span>
+          <div className={eliteLocked ? "flex flex-col gap-1.5 bg-surface2/10 px-4 py-3 border border-border/10 rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer"} onClick={eliteLocked ? undefined : () => router.push("/calisthenics")}>
+            <div className="flex justify-between items-center">
+              <span className={eliteLocked ? "text-secondary/70 text-xs font-bold flex items-center gap-2" : "text-white text-xs font-bold flex items-center gap-2"}>
+                <span>📘</span> Elite Skills
+              </span>
+              <span className={eliteLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
+                {eliteLocked ? "🔒 Locked" : `${eliteAvg}%`}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-secondary">
+              {eliteLocked ? (
+                <span className="text-secondary/60">Complete all Master Books</span>
+              ) : (
+                <>
+                  <span>{pathStats.elite.mastered} / {pathStats.elite.total} Mastered</span>
+                  <span className="flex items-center gap-0.5">Tap to Open →</span>
+                </>
+              )}
+            </div>
           </div>
         </Card>
 
@@ -761,10 +809,10 @@ export default function Dashboard() {
           </div>
           <div className="mt-3 flex flex-col gap-2">
             <div>
-              <span className="text-[10px] text-secondary uppercase block">Current Book</span>
-              <span className="text-white font-bold text-xs block">{currentFocus.bookName}</span>
-              <span className="text-[9px] text-secondary/80 block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount} Exercises Mastered</span>
-              <span className="text-[9px] text-accent block mt-0.5 font-bold">{currentBookProgress.percent}%</span>
+              <span className="text-[10px] text-secondary uppercase block">Exercises Mastered</span>
+              <span className="text-white font-bold text-xs block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount}</span>
+              <span className="text-[10px] text-secondary uppercase block mt-2.5">Book Progress</span>
+              <span className="text-white font-black text-sm block mt-0.5">{currentBookProgress.percent}%</span>
             </div>
             <div>
               <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
