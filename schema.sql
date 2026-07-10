@@ -85,17 +85,22 @@ CREATE POLICY "Allow public access to pr_milestones"
 
 -- 5. Measurements Table
 CREATE TABLE IF NOT EXISTS measurements (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  profile_id  UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  date        DATE NOT NULL DEFAULT CURRENT_DATE,
-  wrist_cm    NUMERIC(5,2),
-  waist_cm    NUMERIC(5,2),
-  arm_cm      NUMERIC(5,2),
-  forearm_cm  NUMERIC(5,2),
-  chest_cm    NUMERIC(5,2),
-  hip_cm      NUMERIC(5,2),
-  weight_kg   NUMERIC(5,2),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  profile_id      UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  date            DATE NOT NULL DEFAULT CURRENT_DATE,
+  weight_kg       NUMERIC(5,2),
+  waist_cm        NUMERIC(5,2),
+  chest_cm        NUMERIC(5,2),
+  shoulders_cm    NUMERIC(5,2),
+  arm_cm          NUMERIC(5,2), -- arm_relaxed
+  arm_flexed_cm   NUMERIC(5,2),
+  forearm_cm      NUMERIC(5,2),
+  thigh_cm        NUMERIC(5,2),
+  calf_cm         NUMERIC(5,2),
+  hip_cm          NUMERIC(5,2),
+  neck_cm         NUMERIC(5,2),
+  wrist_cm        NUMERIC(5,2),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(profile_id, date)
 );
 
