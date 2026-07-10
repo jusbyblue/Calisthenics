@@ -128,46 +128,59 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "PUSH MASTER", path: "push", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Push-up", "Weighted Dips", "Explosive Dips", "90 Degree Push-up", "L-Sit to Handstand Press", "One-Arm Handstand"] },
 
   // Pull (40 items)
-  { name: "Dead Hang", path: "pull", unlock_req: "Hold 20s", mastery_req: "Hold 60s", target_reps: 60 },
-  { name: "Scapular Pull-up", path: "pull", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Australian Row", path: "pull", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Inverted Row", path: "pull", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Jackknife Pull-up", path: "pull", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Negative Chin-up", path: "pull", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Chin-up", path: "pull", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Neutral Grip Pull-up", path: "pull", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Standard Pull-up", path: "pull", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "L-Sit Pull-up", path: "pull", unlock_req: "3 × 4", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Weighted Pull-up", path: "pull", unlock_req: "3 × 4", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Wide Grip Pull-up", path: "pull", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Commando Pull-up", path: "pull", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Towel Pull-up", path: "pull", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Archer Pull-up", path: "pull", unlock_req: "3 × 4", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "High Pull-up (Chest-to-bar)", path: "pull", unlock_req: "3 × 4", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Kipping Muscle-up", path: "pull", unlock_req: "3 × 2", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Clean Muscle-up", path: "pull", unlock_req: "3 × 1", mastery_req: "3 × 6", target_reps: 6 },
-  { name: "L-Sit Muscle-up", path: "pull", unlock_req: "3 × 1", mastery_req: "3 × 5", target_reps: 5 },
-  { name: "Weighted Muscle-up", path: "pull", unlock_req: "3 × 1", mastery_req: "3 × 5", target_reps: 5 },
-  { name: "Ring Muscle-up", path: "pull", unlock_req: "3 × 2", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Explosive Pull-up", path: "pull", unlock_req: "3 × 4", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "One-Arm Dead Hang", path: "pull", unlock_req: "Hold 10s", mastery_req: "Hold 30s", target_reps: 30 },
-  { name: "One-Arm Inverted Row", path: "pull", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "One-Arm Pull-up Assist", path: "pull", unlock_req: "3 × 3", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "One-Arm Negative", path: "pull", unlock_req: "3 × 3", mastery_req: "3 × 6", target_reps: 6 },
-  { name: "One-Arm Pull-up", path: "pull", unlock_req: "3 × 1", mastery_req: "3 × 5", target_reps: 5 },
-  { name: "Back Lever Hold", path: "pull", unlock_req: "Hold 5s", mastery_req: "Hold 15s", target_reps: 15 },
-  { name: "Skin the Cat", path: "pull", unlock_req: "3 × 3", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Tuck Front Lever", path: "pull", unlock_req: "Hold 5s", mastery_req: "Hold 15s", target_reps: 15 },
-  { name: "Advanced Tuck Front Lever", path: "pull", unlock_req: "Hold 3s", mastery_req: "Hold 10s", target_reps: 10 },
-  { name: "Straddle Front Lever", path: "pull", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "Full Front Lever", path: "pull", unlock_req: "Hold 1s", mastery_req: "Hold 5s", target_reps: 5 },
-  { name: "Pull-up to Front Lever", path: "pull", unlock_req: "3 × 2", mastery_req: "3 × 6", target_reps: 6 },
-  { name: "Front Lever Pull-up", path: "pull", unlock_req: "3 × 1", mastery_req: "3 × 5", target_reps: 5 },
-  { name: "Tuck Human Flag", path: "pull", unlock_req: "Hold 3s", mastery_req: "Hold 10s", target_reps: 10 },
-  { name: "Human Flag Hold", path: "pull", unlock_req: "Hold 1s", mastery_req: "Hold 5s", target_reps: 5 },
-  { name: "Dragon Flag", path: "pull", unlock_req: "3 × 3", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Grip Master", path: "pull", unlock_req: "Hold 30s", mastery_req: "Hold 90s", target_reps: 90 },
-  { name: "PULL MASTER", path: "pull", unlock_req: "1 × 1", mastery_req: "1 × 1", target_reps: 1 },
+  // Foundation Branch
+  { name: "Dead Hang", path: "pull", mastery_req: "Hold 60s", target_reps: 60, prerequisites: [] },
+  { name: "Scapular Pull-up", path: "pull", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Dead Hang"] },
+  { name: "Australian Row", path: "pull", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Scapular Pull-up"] },
+  { name: "Inverted Row", path: "pull", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Australian Row"] },
+  { name: "Jackknife Pull-up", path: "pull", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Inverted Row"] },
+  { name: "Negative Chin-up", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Jackknife Pull-up"] },
+  { name: "Chin-up", path: "pull", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Negative Chin-up"] },
+  { name: "Neutral Grip Pull-up", path: "pull", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Chin-up"] },
+  { name: "Standard Pull-up", path: "pull", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Neutral Grip Pull-up"] },
+
+  // Strength Branch
+  { name: "Wide Grip Pull-up", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Standard Pull-up"] },
+  { name: "Commando Pull-up", path: "pull", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Standard Pull-up"] },
+  { name: "Towel Pull-up", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Standard Pull-up"] },
+  { name: "L-Sit Pull-up", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Standard Pull-up"] },
+  { name: "Archer Pull-up", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Wide Grip Pull-up"] },
+  { name: "Weighted Pull-up", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Archer Pull-up"] },
+  { name: "Pull-up to Front Lever", path: "pull", mastery_req: "3 × 6", target_reps: 6, prerequisites: ["Weighted Pull-up"] },
+
+  // Muscle-up Branch
+  { name: "High Pull-up (Chest-to-bar)", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Standard Pull-up"] },
+  { name: "Explosive Pull-up", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["High Pull-up (Chest-to-bar)"] },
+  { name: "Kipping Muscle-up", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Explosive Pull-up"] },
+  { name: "Clean Muscle-up", path: "pull", mastery_req: "3 × 6", target_reps: 6, prerequisites: ["Kipping Muscle-up"] },
+  { name: "Ring Muscle-up", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Clean Muscle-up"] },
+  { name: "L-Sit Muscle-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Ring Muscle-up"] },
+  { name: "Weighted Muscle-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["L-Sit Muscle-up"] },
+
+  // One Arm Branch
+  { name: "One-Arm Dead Hang", path: "pull", mastery_req: "Hold 30s", target_reps: 30, prerequisites: ["Standard Pull-up"] },
+  { name: "One-Arm Inverted Row", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["One-Arm Dead Hang"] },
+  { name: "One-Arm Pull-up Assist", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["One-Arm Inverted Row"] },
+  { name: "One-Arm Negative", path: "pull", mastery_req: "3 × 6", target_reps: 6, prerequisites: ["One-Arm Pull-up Assist"] },
+  { name: "One-Arm Pull-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["One-Arm Negative"] },
+
+  // Front Lever Branch
+  { name: "Skin the Cat", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: [] },
+  { name: "Tuck Front Lever", path: "pull", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Skin the Cat"] },
+  { name: "Advanced Tuck Front Lever", path: "pull", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Tuck Front Lever"] },
+  { name: "Straddle Front Lever", path: "pull", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["Advanced Tuck Front Lever"] },
+  { name: "Full Front Lever", path: "pull", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Straddle Front Lever"] },
+  { name: "Front Lever Pull-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Full Front Lever"] },
+
+  // Back Lever Branch
+  { name: "Tuck Back Lever", path: "pull", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Skin the Cat"] },
+  { name: "Advanced Tuck Back Lever", path: "pull", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Tuck Back Lever"] },
+  { name: "Straddle Back Lever", path: "pull", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["Advanced Tuck Back Lever"] },
+  { name: "Full Back Lever", path: "pull", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Straddle Back Lever"] },
+
+  // Elite Branch
+  { name: "Impossible Pull-up", path: "pull", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["One-Arm Pull-up", "Front Lever Pull-up"] },
+  { name: "PULL MASTER", path: "pull", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Pull-up", "Weighted Muscle-up", "Full Back Lever", "Impossible Pull-up"] },
 
   // Core (33 items)
   { name: "Plank", path: "core", unlock_req: "Hold 30s", mastery_req: "Hold 90s", target_reps: 90 },
@@ -248,6 +261,16 @@ const PUSH_PATHS = {
   "Handstand": ["Decline Push-up", "Pike Push-up", "Elevated Pike Push-up", "Wall Handstand Kick-up", "Wall Handstand Hold", "Handstand Wall Walk", "Handstand Shoulder Tap", "Freestanding Handstand Hold", "Handstand Push-up"],
   "Planche": ["Planche Lean", "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean", "Straddle Planche Hold", "Full Planche"],
   "Elite": ["90 Degree Push-up", "L-Sit to Handstand Press", "One-Arm Handstand"]
+} as const;
+
+const PULL_PATHS = {
+  "Foundation": ["Dead Hang", "Scapular Pull-up", "Australian Row", "Inverted Row", "Jackknife Pull-up", "Negative Chin-up", "Chin-up", "Neutral Grip Pull-up", "Standard Pull-up"],
+  "Strength": ["Wide Grip Pull-up", "Commando Pull-up", "Towel Pull-up", "L-Sit Pull-up", "Archer Pull-up", "Weighted Pull-up", "Pull-up to Front Lever"],
+  "Muscle-up": ["High Pull-up (Chest-to-bar)", "Explosive Pull-up", "Kipping Muscle-up", "Clean Muscle-up", "Ring Muscle-up", "L-Sit Muscle-up", "Weighted Muscle-up"],
+  "One Arm": ["One-Arm Dead Hang", "One-Arm Inverted Row", "One-Arm Pull-up Assist", "One-Arm Negative", "One-Arm Pull-up"],
+  "Front Lever": ["Skin the Cat", "Tuck Front Lever", "Advanced Tuck Front Lever", "Straddle Front Lever", "Full Front Lever", "Front Lever Pull-up"],
+  "Back Lever": ["Tuck Back Lever", "Advanced Tuck Back Lever", "Straddle Back Lever", "Full Back Lever"],
+  "Elite": ["Impossible Pull-up"]
 } as const;
 
 function getXpForDifficulty(difficulty: number): number {
@@ -436,6 +459,9 @@ export default function AsvandCalisthenicsPage() {
     if (exName === "PUSH MASTER") {
       return Object.keys(PUSH_PATHS).every(pathKey => isPathComplete(pathKey, "push"));
     }
+    if (exName === "PULL MASTER") {
+      return Object.keys(PULL_PATHS).every(pathKey => isPathComplete(pathKey, "pull"));
+    }
     const item = GUILD_CATALOG.find(x => x.name === exName);
     if (!item) return false;
     
@@ -455,13 +481,16 @@ export default function AsvandCalisthenicsPage() {
   };
 
   // Helper to check if a specific progression branch is fully completed
-  const isPathComplete = (pathName: string, book: "legs" | "push") => {
+  const isPathComplete = (pathName: string, book: "legs" | "push" | "pull") => {
     if (book === "legs") {
       const p = pathName as keyof typeof LEG_PATHS;
       return LEG_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
-    } else {
+    } else if (book === "push") {
       const p = pathName as keyof typeof PUSH_PATHS;
       return PUSH_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
+    } else {
+      const p = pathName as keyof typeof PULL_PATHS;
+      return PULL_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
     }
   };
 
@@ -787,10 +816,23 @@ export default function AsvandCalisthenicsPage() {
                         /* Locked Exercise Layout: Show Prerequisite Checklist */
                         <div className="mt-1">
                           <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-0.5">Requirements</span>
-                          {exName === "LEG MASTER" || exName === "PUSH MASTER" ? (
+                          {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" ? (
                             <div className="flex flex-col gap-1.5 mt-2">
-                              {Object.keys(exName === "LEG MASTER" ? LEG_PATHS : PUSH_PATHS).map(pathKey => {
-                                const complete = isPathComplete(pathKey, exName === "LEG MASTER" ? "legs" : "push");
+                              {Object.keys(
+                                exName === "LEG MASTER" 
+                                  ? LEG_PATHS 
+                                  : exName === "PUSH MASTER" 
+                                    ? PUSH_PATHS 
+                                    : PULL_PATHS
+                              ).map(pathKey => {
+                                const complete = isPathComplete(
+                                  pathKey, 
+                                  exName === "LEG MASTER" 
+                                    ? "legs" 
+                                    : exName === "PUSH MASTER" 
+                                      ? "push" 
+                                      : "pull"
+                                );
                                 return (
                                   <div key={pathKey} className="flex items-center gap-2 text-xs">
                                     <span>{complete ? "✅" : "⬜"}</span>
@@ -844,8 +886,8 @@ export default function AsvandCalisthenicsPage() {
                             <div>
                               <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Mastery Requirement</span>
                               <span className="text-xs font-bold text-white">
-                                {exName === "LEG MASTER" || exName === "PUSH MASTER" 
-                                  ? `Complete all ${exName === "LEG MASTER" ? "Leg" : "Push"} Mastery paths` 
+                                {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER"
+                                  ? `Complete all ${exName === "LEG MASTER" ? "Leg" : exName === "PUSH MASTER" ? "Push" : "Pull"} Mastery paths` 
                                   : ex.mastery_req}
                               </span>
                             </div>
@@ -975,8 +1017,21 @@ export default function AsvandCalisthenicsPage() {
                               <div>
                                 <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Prerequisite Branches</span>
                                 <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
-                                  {Object.keys(exName === "LEG MASTER" ? LEG_PATHS : PUSH_PATHS).map(pathKey => {
-                                    const complete = isPathComplete(pathKey, exName === "LEG MASTER" ? "legs" : "push");
+                                  {Object.keys(
+                                    exName === "LEG MASTER" 
+                                      ? LEG_PATHS 
+                                      : exName === "PUSH MASTER" 
+                                        ? PUSH_PATHS 
+                                        : PULL_PATHS
+                                  ).map(pathKey => {
+                                    const complete = isPathComplete(
+                                      pathKey, 
+                                      exName === "LEG MASTER" 
+                                        ? "legs" 
+                                        : exName === "PUSH MASTER" 
+                                          ? "push" 
+                                          : "pull"
+                                    );
                                     return (
                                       <div key={pathKey} className="flex items-center gap-1 text-xs">
                                         <span className={complete ? "text-success font-bold" : "text-secondary/30"}>
@@ -994,7 +1049,7 @@ export default function AsvandCalisthenicsPage() {
                               <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
                                 <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
                                 <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
-                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : "Push Master"} Title</span>
+                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : "Pull Master"} Title</span>
                                   <span>⚡ +500 XP</span>
                                   <span>📚 Book Complete</span>
                                   <span>📜 Certificate Unlocked</span>
