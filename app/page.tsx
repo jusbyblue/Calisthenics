@@ -246,6 +246,25 @@ export default function Dashboard() {
     return Object.values(EXERCISE_ORDER).reduce((sum, list) => sum + list.length, 0);
   }, []);
 
+  const pathStats = useMemo(() => {
+    const getCounts = (book: string) => {
+      const bookCatalog = GUILD_CATALOG.filter(x => x.path === book);
+      const bookSkills = skills.filter(s => s.path === book);
+      const mastered = bookSkills.filter(s => s.mastery_percent >= 100).length;
+      const total = bookCatalog.length;
+      return { mastered, total };
+    };
+
+    return {
+      legs: getCounts("legs"),
+      push: getCounts("push"),
+      pull: getCounts("pull"),
+      core: getCounts("core"),
+      skills: getCounts("skills"),
+      elite: getCounts("elite"),
+    };
+  }, [skills]);
+
   const learnedCount = skills.filter(s => s.learned).length;
   const masteredCount = skills.filter(s => s.mastery_percent >= 100).length;
 
@@ -461,7 +480,7 @@ export default function Dashboard() {
         }
         return {
           target: ex.name,
-          remaining: remainingPrereqs.length > 0 ? remainingPrereqs.join(", ") : "None"
+          remaining: remainingPrereqs.length > 0 ? "Master " + remainingPrereqs.join(", Master ") : "None"
         };
       }
     }
@@ -686,7 +705,7 @@ export default function Dashboard() {
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📕</span> Leg Mastery
             </span>
-            <span className="font-extrabold text-accent text-xs">{legsAvg}%</span>
+            <span className="font-extrabold text-accent text-xs">{pathStats.legs.mastered} / {pathStats.legs.total} • {legsAvg}%</span>
           </div>
 
           {/* Push */}
@@ -694,7 +713,7 @@ export default function Dashboard() {
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📘</span> Push Mastery
             </span>
-            <span className="font-extrabold text-accent text-xs">{pushAvg}%</span>
+            <span className="font-extrabold text-accent text-xs">{pathStats.push.mastered} / {pathStats.push.total} • {pushAvg}%</span>
           </div>
 
           {/* Pull */}
@@ -702,7 +721,7 @@ export default function Dashboard() {
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📙</span> Pull Mastery
             </span>
-            <span className="font-extrabold text-accent text-xs">{pullAvg}%</span>
+            <span className="font-extrabold text-accent text-xs">{pathStats.pull.mastered} / {pathStats.pull.total} • {pullAvg}%</span>
           </div>
 
           {/* Core */}
@@ -710,7 +729,7 @@ export default function Dashboard() {
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📗</span> Core Mastery
             </span>
-            <span className="font-extrabold text-accent text-xs">{coreAvg}%</span>
+            <span className="font-extrabold text-accent text-xs">{pathStats.core.mastered} / {pathStats.core.total} • {coreAvg}%</span>
           </div>
 
           {/* Skills */}
@@ -719,7 +738,7 @@ export default function Dashboard() {
               <span>📕</span> Skills & Balance
             </span>
             <span className={skillsLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-              {skillsLocked ? "Locked" : `${skillsAvg}%`}
+              {skillsLocked ? "Locked" : `${pathStats.skills.mastered} / {pathStats.skills.total} • ${skillsAvg}%`}
             </span>
           </div>
 
@@ -729,7 +748,7 @@ export default function Dashboard() {
               <span>📘</span> Elite Skills
             </span>
             <span className={eliteLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-              {eliteLocked ? "Locked" : `${eliteAvg}%`}
+              {eliteLocked ? "Locked" : `${pathStats.elite.mastered} / {pathStats.elite.total} • ${eliteAvg}%`}
             </span>
           </div>
         </Card>
@@ -744,7 +763,8 @@ export default function Dashboard() {
             <div>
               <span className="text-[10px] text-secondary uppercase block">Current Book</span>
               <span className="text-white font-bold text-xs block">{currentFocus.bookName}</span>
-              <span className="text-[9px] text-secondary/80 block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount} mastered ({currentBookProgress.percent}%)</span>
+              <span className="text-[9px] text-secondary/80 block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount} Exercises Mastered</span>
+              <span className="text-[9px] text-accent block mt-0.5 font-bold">{currentBookProgress.percent}%</span>
             </div>
             <div>
               <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
@@ -770,7 +790,7 @@ export default function Dashboard() {
             <span className="text-2xl">🔥</span>
             <div>
               <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Daily Streak</span>
-              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} Days</h4>
+              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} {dailyStreak === 1 ? "Day" : "Days"}</h4>
             </div>
           </div>
         </Card>
@@ -780,11 +800,11 @@ export default function Dashboard() {
           <CardLabel>Next Milestone</CardLabel>
           <div className="mt-2.5 flex flex-col gap-2">
             <div>
-              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Unlock Goal</span>
+              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Next Unlock</span>
               <h4 className="text-xs font-black text-white mt-0.5">{nextMilestoneInfo.target}</h4>
             </div>
             <div className="border-t border-border/15 pt-2">
-              <span className="text-[9px] text-secondary/80 uppercase font-bold tracking-wider block">Remaining Prerequisites</span>
+              <span className="text-[9px] text-secondary/80 uppercase font-bold tracking-wider block">Remaining</span>
               <p className="text-xs text-accent font-semibold mt-0.5">{nextMilestoneInfo.remaining}</p>
             </div>
           </div>
@@ -798,7 +818,8 @@ export default function Dashboard() {
               <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
                 <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Newest Mastered</span>
                 <h4 className="text-xs font-black text-white mt-0.5">{newestMastered.name}</h4>
-                <span className="text-[8px] text-secondary block mt-1">Unlocked: {newestMastered.unlocksText}</span>
+                <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block mt-2">Next Exercise Unlocked</span>
+                <span className="text-xs font-black text-white block mt-0.5">{newestMastered.unlocksText}</span>
               </div>
             ) : (
               <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
@@ -842,27 +863,39 @@ export default function Dashboard() {
             </div>
             <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
               <span className="text-secondary text-[10px] block uppercase font-medium">Athlete Score</span>
-              <span className="text-lg font-black text-accent mt-1 block">{athleteScore} <span className="text-secondary text-[10px] font-normal">{athleteGrade}</span></span>
+              <span className="text-lg font-black text-accent mt-1 block">{athleteScore}</span>
+            </div>
+            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
+              <span className="text-secondary text-[10px] block uppercase font-medium">Rank</span>
+              <span className="text-lg font-black text-white mt-1 block">{athleteGrade}</span>
             </div>
             <div className="bg-surface2/30 p-3 rounded-xl border border-border/10 col-span-2">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Master Titles Earned ({masterTitles.length})</span>
-              <span className="text-xs font-black text-white mt-1 block">
-                {masterTitles.length > 0 ? masterTitles.join(" • ") : "None yet"}
-              </span>
+              <span className="text-secondary text-[10px] block uppercase font-medium">Titles</span>
+              <div className="flex flex-col gap-1 mt-1.5">
+                {masterTitles.length > 0 ? (
+                  masterTitles.map((title, i) => (
+                    <span key={i} className="text-xs font-black text-white flex items-center gap-1">
+                      🏆 {title}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-secondary/60 italic">None yet</span>
+                )}
+              </div>
             </div>
           </div>
         </Card>
 
         {/* Weakest Path & Recommendation */}
         <Card className="border border-[#FF4A4A]/25 bg-[#FF4A4A]/5">
-          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Today</CardLabel>
+          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Next Training</CardLabel>
           <div className="mt-2 flex flex-col gap-1.5">
             <div className="flex justify-between items-center">
               <span className="text-white font-bold text-sm">{weakestPathInfo.name}</span>
               <span className="text-xs font-bold text-[#FF4A4A] bg-[#FF4A4A]/10 px-2.5 py-0.5 rounded-lg border border-[#FF4A4A]/20">{weakestPathInfo.avg}%</span>
             </div>
             <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1.5 flex flex-col gap-1">
-              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended From Unlocked Progress Tree</span>
+              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended Next Training</span>
               {recommendedToday.map((rec, i) => (
                 <div key={rec.name || i} className="flex justify-between items-center text-xs py-0.5">
                   <span className="text-white font-semibold flex items-center gap-1.5">
