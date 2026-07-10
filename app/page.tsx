@@ -387,39 +387,127 @@ export default function Dashboard() {
     return "Master";
   }, [athleteScore]);
 
-  // Today's Progress / Daily progress
-  const todayProgress = useMemo(() => {
+  // Daily Streak Calculator
+  const dailyStreak = useMemo(() => {
+    if (prLogs.length === 0) return 0;
+    const uniqueDates = Array.from(new Set(prLogs.map(log => log.date))).sort().reverse();
+    if (uniqueDates.length === 0) return 0;
+
     const todayStr = new Date().toISOString().split("T")[0];
-    const todayLogs = prLogs.filter(log => log.date === todayStr);
-    const todayXp = todayLogs.reduce((sum, log) => {
-      const catalogItem = GUILD_CATALOG.find(x => x.name === log.exercise);
-      let difficulty = 3;
-      if (catalogItem) {
-        if (log.exercise.includes("Air Squat") || log.exercise.includes("Wall Push-up")) difficulty = 1;
-        else if (log.exercise.includes("Pistol Squat") || log.exercise.includes("Handstand Push-up")) difficulty = 8;
-        else if (log.exercise.includes("Full Planche") || log.exercise.includes("LEG MASTER")) difficulty = 10;
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+    if (uniqueDates[0] !== todayStr && uniqueDates[0] !== yesterdayStr) {
+      return 0;
+    }
+
+    let streak = 1;
+    let currentDate = new Date(uniqueDates[0]);
+
+    for (let i = 1; i < uniqueDates.length; i++) {
+      const prevDate = new Date(uniqueDates[i]);
+      const diffTime = Math.abs(currentDate.getTime() - prevDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        streak++;
+        currentDate = prevDate;
+      } else if (diffDays > 1) {
+        break;
       }
-      return sum + getXpForDifficulty(difficulty);
-    }, 0);
-    return {
-      exercisesLogged: todayLogs.length,
-      xpEarned: todayXp
-    };
+    }
+    return streak;
   }, [prLogs]);
 
-  // Latest Unlock / Learned skill calculation
-  const latestUnlock = useMemo(() => {
-    const learnedSkills = skills.filter(s => s.learned);
-    if (learnedSkills.length === 0) {
-      return { name: "Guild Journey Initiated", date: "Just now" };
-    }
-    for (const log of prLogs) {
-      const matchedSkill = skills.find(s => s.exercise_name === log.exercise);
-      if (matchedSkill && matchedSkill.learned) {
-        return { name: matchedSkill.exercise_name, date: log.date };
+  // Next Milestone Card (first locked exercise in weakest path)
+  const nextMilestoneInfo = useMemo(() => {
+    const weakestBook = weakestPathInfo.path;
+    const orderList = GUILD_CATALOG.filter(x => x.path === weakestBook);
+
+    const isExerciseUnlockedLocal = (exName: string) => {
+      const item = GUILD_CATALOG.find(x => x.name === exName);
+      if (!item) return false;
+      const prereqs = item.prerequisites;
+      if (!prereqs || (Array.isArray(prereqs) && prereqs.length === 0)) return true;
+      const isExerciseMasteredLocal = (name: string) => {
+        const s = skills.find(sk => sk.exercise_name === name);
+        return s ? s.mastery_percent >= 100 : false;
+      };
+      if (Array.isArray(prereqs)) {
+        return prereqs.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "and") {
+        return prereqs.exercises.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "or") {
+        return prereqs.exercises.some(isExerciseMasteredLocal);
+      }
+      return false;
+    };
+
+    for (const ex of orderList) {
+      if (!ex.name.includes("MASTER") && !isExerciseUnlockedLocal(ex.name)) {
+        const prereqs = ex.prerequisites;
+        const remainingPrereqs: string[] = [];
+        if (prereqs) {
+          const list = Array.isArray(prereqs) ? prereqs : prereqs.exercises;
+          list.forEach(name => {
+            const progress = skills.find(s => s.exercise_name === name);
+            if (!progress || progress.mastery_percent < 100) {
+              remainingPrereqs.push(name);
+            }
+          });
+        }
+        return {
+          target: ex.name,
+          remaining: remainingPrereqs.length > 0 ? remainingPrereqs.join(", ") : "None"
+        };
       }
     }
-    return { name: learnedSkills[0].exercise_name, date: "Recently" };
+
+    return {
+      target: weakestPathInfo.name + " Mastered",
+      remaining: "All exercises unlocked!"
+    };
+  }, [weakestPathInfo, skills]);
+
+  // Current Book Progress
+  const currentBookProgress = useMemo(() => {
+    const book = weakestPathInfo.path;
+    const bookCatalog = GUILD_CATALOG.filter(x => x.path === book);
+    const bookSkills = skills.filter(s => s.path === book);
+    const masteredCount = bookSkills.filter(s => s.mastery_percent >= 100).length;
+    const totalCount = bookCatalog.length;
+    const percent = totalCount > 0 ? Math.round((masteredCount / totalCount) * 100) : 0;
+    return {
+      masteredCount,
+      totalCount,
+      percent
+    };
+  }, [weakestPathInfo, skills]);
+
+  // Newest Mastered or Latest Unlock
+  const newestMastered = useMemo(() => {
+    const mastered = skills.filter(s => s.mastery_percent >= 100);
+    if (mastered.length === 0) return null;
+    for (const log of prLogs) {
+      const match = mastered.find(m => m.exercise_name === log.exercise);
+      if (match) {
+        const unlocks = GUILD_CATALOG.filter(item => {
+          const prereqs = item.prerequisites;
+          if (!prereqs) return false;
+          const list = Array.isArray(prereqs) ? prereqs : prereqs.exercises;
+          return list.includes(match.exercise_name);
+        }).map(x => x.name);
+
+        return {
+          name: match.exercise_name,
+          unlocksText: unlocks.length > 0 ? unlocks.join(", ") : "None"
+        };
+      }
+    }
+    return { name: mastered[0].exercise_name, unlocksText: "None" };
   }, [skills, prLogs]);
 
   // Dynamic Achievements list
@@ -654,8 +742,9 @@ export default function Dashboard() {
           </div>
           <div className="mt-3 flex flex-col gap-2">
             <div>
-              <span className="text-[10px] text-secondary uppercase block">Book</span>
-              <span className="text-white font-bold text-xs">{currentFocus.bookName}</span>
+              <span className="text-[10px] text-secondary uppercase block">Current Book</span>
+              <span className="text-white font-bold text-xs block">{currentFocus.bookName}</span>
+              <span className="text-[9px] text-secondary/80 block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount} mastered ({currentBookProgress.percent}%)</span>
             </div>
             <div>
               <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
@@ -675,61 +764,50 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Daily Target Progress */}
-        <Card className="bg-[#121221]/90">
-          <CardLabel>Today's Progress</CardLabel>
-          <div className="flex flex-col gap-2 mt-1.5">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-secondary">Exercises Logged Today</span>
-              <span className="text-white font-extrabold">{todayProgress.exercisesLogged}</span>
+        {/* Daily Streak Card */}
+        <Card className="border border-accent/20 bg-accent/5">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Daily Streak</span>
+              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} Days</h4>
             </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-secondary">XP Earned Today</span>
-              <span className="text-accent font-black">+{todayProgress.xpEarned} XP</span>
-            </div>
-            <ProgressBar value={Math.min(100, (todayProgress.exercisesLogged / 3) * 100)} color="var(--accent)" height={5} />
-            <span className="text-[8.5px] text-secondary/70 italic mt-0.5 block">Aim for at least 3 logged exercises per day!</span>
           </div>
         </Card>
 
-        {/* Recent Activity Logs */}
-        <Card>
-          <CardLabel>Recent Activity</CardLabel>
-          <div className="flex flex-col gap-2.5 mt-2">
-            {prLogs.length === 0 ? (
-              <span className="text-xs text-secondary/50 italic py-2 block text-center">No logged training sessions yet.</span>
-            ) : (
-              prLogs.slice(0, 3).map((log, i) => (
-                <div key={log.id || i} className="flex justify-between items-center bg-[#13131F] p-2.5 rounded-xl border border-border/10">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">⚡</span>
-                    <div>
-                      <h4 className="text-xs font-bold text-white">{log.exercise}</h4>
-                      <p className="text-[9px] text-secondary/60 mt-0.5">{log.date}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-black text-accent">{log.value} {log.unit}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </Card>
-
-        {/* Achievements / Latest Unlock */}
-        <Card className="border border-success/20 bg-success/5">
-          <CardLabel className="text-success">Recent Achievement / Latest Unlock</CardLabel>
+        {/* Next Milestone Card */}
+        <Card className="border border-accent/20 bg-[#121221]/95">
+          <CardLabel>Next Milestone</CardLabel>
           <div className="mt-2.5 flex flex-col gap-2">
-            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-success/10 border border-success/15">
-              <span className="text-lg">🎉</span>
-              <div>
-                <span className="text-[8px] text-secondary uppercase font-bold tracking-wider">Latest Activity Unlock</span>
-                <h4 className="text-xs font-black text-white mt-0.5">{latestUnlock.name}</h4>
-                <p className="text-[9px] text-secondary/60 mt-0.5">{latestUnlock.date}</p>
-              </div>
+            <div>
+              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Unlock Goal</span>
+              <h4 className="text-xs font-black text-white mt-0.5">{nextMilestoneInfo.target}</h4>
             </div>
-            <div className="flex flex-col gap-1 mt-1 text-xs">
-              <span className="text-[9px] text-secondary uppercase font-bold mb-0.5 block">Recent Milestone Accomplished</span>
-              {recentAchievements.slice(0, 2).map((ach, i) => (
+            <div className="border-t border-border/15 pt-2">
+              <span className="text-[9px] text-secondary/80 uppercase font-bold tracking-wider block">Remaining Prerequisites</span>
+              <p className="text-xs text-accent font-semibold mt-0.5">{nextMilestoneInfo.remaining}</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Latest Milestone Card */}
+        <Card className="border border-success/20 bg-success/5">
+          <CardLabel className="text-success">🏆 Latest Milestone</CardLabel>
+          <div className="mt-2.5 flex flex-col gap-2.5">
+            {newestMastered ? (
+              <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
+                <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Newest Mastered</span>
+                <h4 className="text-xs font-black text-white mt-0.5">{newestMastered.name}</h4>
+                <span className="text-[8px] text-secondary block mt-1">Unlocked: {newestMastered.unlocksText}</span>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
+                <span className="text-xs text-secondary/60 italic block">No skills mastered yet. Train to unlock your first milestone!</span>
+              </div>
+            )}
+            <div className="flex flex-col gap-1 text-xs">
+              <span className="text-[9px] text-secondary uppercase font-bold mb-0.5 block">Recent Achievements</span>
+              {recentAchievements.map((ach, i) => (
                 <span key={i} className="text-white font-medium flex items-center gap-1.5">
                   <span className="text-[10px]">⭐</span> {ach}
                 </span>
