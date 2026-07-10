@@ -119,13 +119,10 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Advanced Tuck Planche", path: "push", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Tuck Planche"] },
   { name: "Straddle Planche Lean", path: "push", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Advanced Tuck Planche"] },
   { name: "Straddle Planche Hold", path: "push", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["Straddle Planche Lean"] },
-  { name: "Full Planche", path: "push", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Straddle Planche Hold"] },
-
   // Elite Branch
   { name: "90 Degree Push-up", path: "push", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["Handstand Push-up", "Pseudo Planche Push-up"] },
   { name: "L-Sit to Handstand Press", path: "push", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["Handstand Push-up", "L-Sit (Floor)"] },
-  { name: "One-Arm Handstand", path: "push", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Full Planche", "Freestanding Handstand Hold"] },
-  { name: "PUSH MASTER", path: "push", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Push-up", "Weighted Dips", "Explosive Dips", "90 Degree Push-up", "L-Sit to Handstand Press", "One-Arm Handstand"] },
+  { name: "PUSH MASTER", path: "push", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Push-up", "Weighted Dips", "Explosive Dips", "Straddle Planche Hold", "90 Degree Push-up", "L-Sit to Handstand Press"] },
 
   // Pull (40 items)
   // Foundation Branch
@@ -162,8 +159,6 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "One-Arm Inverted Row", path: "pull", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["One-Arm Dead Hang"] },
   { name: "One-Arm Pull-up Assist", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["One-Arm Inverted Row"] },
   { name: "One-Arm Negative", path: "pull", mastery_req: "3 × 6", target_reps: 6, prerequisites: ["One-Arm Pull-up Assist"] },
-  { name: "One-Arm Pull-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["One-Arm Negative"] },
-
   // Front Lever Branch
   { name: "Skin the Cat", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Standard Pull-up", "L-Sit Pull-up"] },
   { name: "Tuck Front Lever", path: "pull", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Skin the Cat"] },
@@ -179,8 +174,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Full Back Lever", path: "pull", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Straddle Back Lever"] },
 
   // Elite Branch
-  { name: "Impossible Pull-up", path: "pull", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["One-Arm Pull-up", "Front Lever Pull-up"] },
-  { name: "PULL MASTER", path: "pull", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Pull-up", "Weighted Muscle-up", "Full Back Lever", "Impossible Pull-up"] },
+  { name: "PULL MASTER", path: "pull", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["Pull-up to Front Lever", "Weighted Muscle-up", "One-Arm Negative", "Front Lever Pull-up", "Full Back Lever"] },
 
   // Core (27 items)
   // Foundation Branch
@@ -264,14 +258,15 @@ const GUILD_CATALOG: CatalogItem[] = [
   // Mastery Endpoint
   { name: "SKILLS MASTER", path: "skills", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Crow Pose", "Handstand Press tuck", "Dive Roll", "Macaco", "Bridge Kickover"] },
 
-  // Elite Skills (7 items)
-  { name: "One-Arm Pull-up", path: "elite", unlock_req: "3 × 1", mastery_req: "3 × 5", target_reps: 5 },
-  { name: "One-Arm Handstand Hold", path: "elite", unlock_req: "Hold 3s", mastery_req: "Hold 10s", target_reps: 10 },
-  { name: "Full Planche Hold", path: "elite", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "Iron Cross (Rings)", path: "elite", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "Victorian Cross", path: "elite", unlock_req: "Hold 1s", mastery_req: "Hold 5s", target_reps: 5 },
-  { name: "Manna Full Hold", path: "elite", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "ELITE MASTER", path: "elite", unlock_req: "1 × 1", mastery_req: "1 × 1", target_reps: 1 }
+  // Elite Skills (8 items)
+  { name: "Impossible Pull-up", path: "elite", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["PULL MASTER"] },
+  { name: "One-Arm Pull-up", path: "elite", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Impossible Pull-up"] },
+  { name: "Full Planche", path: "elite", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["PUSH MASTER"] },
+  { name: "One-Arm Handstand", path: "elite", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["One-Arm Pull-up", "Full Planche"] },
+  { name: "Manna Full Hold", path: "elite", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["CORE MASTER", "SKILLS MASTER"] },
+  { name: "Iron Cross (Rings)", path: "elite", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["PUSH MASTER", "PULL MASTER"] },
+  { name: "Victorian Cross", path: "elite", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Iron Cross (Rings)"] },
+  { name: "ELITE MASTER", path: "elite", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Pull-up", "Full Planche", "One-Arm Handstand", "Iron Cross (Rings)", "Victorian Cross", "Manna Full Hold"] },
 ];
 
 const LEG_PATHS = {
@@ -289,18 +284,17 @@ const PUSH_PATHS = {
   "Dips": ["Dips (Bench)", "Standard Dips", "Ring Dips", "Weighted Dips"],
   "Explosive": ["Clap Push-up", "Superman Push-up", "Explosive Dips"],
   "Handstand": ["Decline Push-up", "Pike Push-up", "Elevated Pike Push-up", "Wall Handstand Kick-up", "Wall Handstand Hold", "Handstand Wall Walk", "Handstand Shoulder Tap", "Freestanding Handstand Hold", "Handstand Push-up"],
-  "Planche": ["Planche Lean", "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean", "Straddle Planche Hold", "Full Planche"],
-  "Elite": ["90 Degree Push-up", "L-Sit to Handstand Press", "One-Arm Handstand"]
+  "Planche": ["Planche Lean", "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean", "Straddle Planche Hold"],
+  "Elite": ["90 Degree Push-up", "L-Sit to Handstand Press"]
 } as const;
 
 const PULL_PATHS = {
   "Foundation": ["Dead Hang", "Scapular Pull-up", "Australian Row", "Inverted Row", "Jackknife Pull-up", "Negative Chin-up", "Chin-up", "Neutral Grip Pull-up", "Standard Pull-up"],
   "Strength": ["Wide Grip Pull-up", "Commando Pull-up", "Towel Pull-up", "L-Sit Pull-up", "Archer Pull-up", "Weighted Pull-up", "Pull-up to Front Lever"],
   "Muscle-up": ["High Pull-up (Chest-to-bar)", "Explosive Pull-up", "Kipping Muscle-up", "Clean Muscle-up", "Ring Muscle-up", "L-Sit Muscle-up", "Weighted Muscle-up"],
-  "One Arm": ["One-Arm Dead Hang", "One-Arm Inverted Row", "One-Arm Pull-up Assist", "One-Arm Negative", "One-Arm Pull-up"],
+  "One Arm": ["One-Arm Dead Hang", "One-Arm Inverted Row", "One-Arm Pull-up Assist", "One-Arm Negative"],
   "Front Lever": ["Skin the Cat", "Tuck Front Lever", "Advanced Tuck Front Lever", "Straddle Front Lever", "Full Front Lever", "Front Lever Pull-up"],
-  "Back Lever": ["Tuck Back Lever", "Advanced Tuck Back Lever", "Straddle Back Lever", "Full Back Lever"],
-  "Elite": ["Impossible Pull-up"]
+  "Back Lever": ["Tuck Back Lever", "Advanced Tuck Back Lever", "Straddle Back Lever", "Full Back Lever"]
 } as const;
 
 const CORE_PATHS = {
@@ -319,6 +313,14 @@ const SKILLS_PATHS = {
   "Movement": ["Forward Roll", "Backward Roll", "Shoulder Roll", "Kip-Up", "Dive Roll"],
   "Coordination": ["Bear Crawl", "Crab Walk", "Ape Walk", "Frog Walk", "Cartwheel", "Macaco"],
   "Bridge": ["Bridge Hold", "Bridge Rock", "Bridge Kickover"]
+} as const;
+
+const ELITE_PATHS = {
+  "Pull Mastery": ["Impossible Pull-up", "One-Arm Pull-up"],
+  "Push Mastery": ["Full Planche"],
+  "Inversion Mastery": ["One-Arm Handstand"],
+  "Compression Mastery": ["Manna Full Hold"],
+  "Rings Mastery": ["Iron Cross (Rings)", "Victorian Cross"]
 } as const;
 
 function getXpForDifficulty(difficulty: number): number {
@@ -515,6 +517,9 @@ export default function AsvandCalisthenicsPage() {
     if (exName === "SKILLS MASTER") {
       return Object.keys(SKILLS_PATHS).every(pathKey => isPathComplete(pathKey, "skills"));
     }
+    if (exName === "ELITE MASTER") {
+      return Object.keys(ELITE_PATHS).every(pathKey => isPathComplete(pathKey, "elite"));
+    }
     const item = GUILD_CATALOG.find(x => x.name === exName);
     if (!item) return false;
     
@@ -534,7 +539,7 @@ export default function AsvandCalisthenicsPage() {
   };
 
   // Helper to check if a specific progression branch is fully completed
-  const isPathComplete = (pathName: string, book: "legs" | "push" | "pull" | "core" | "skills") => {
+  const isPathComplete = (pathName: string, book: "legs" | "push" | "pull" | "core" | "skills" | "elite") => {
     if (book === "legs") {
       const p = pathName as keyof typeof LEG_PATHS;
       return LEG_PATHS[p]?.every(isExerciseMastered) || false;
@@ -547,9 +552,12 @@ export default function AsvandCalisthenicsPage() {
     } else if (book === "core") {
       const p = pathName as keyof typeof CORE_PATHS;
       return CORE_PATHS[p]?.every(isExerciseMastered) || false;
-    } else {
+    } else if (book === "skills") {
       const p = pathName as keyof typeof SKILLS_PATHS;
       return SKILLS_PATHS[p]?.every(isExerciseMastered) || false;
+    } else {
+      const p = pathName as keyof typeof ELITE_PATHS;
+      return ELITE_PATHS[p]?.every(isExerciseMastered) || false;
     }
   };
 
@@ -875,7 +883,7 @@ export default function AsvandCalisthenicsPage() {
                         /* Locked Exercise Layout: Show Prerequisite Checklist */
                         <div className="mt-1">
                           <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-0.5">Requirements</span>
-                          {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER" ? (
+                          {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER" || exName === "ELITE MASTER" ? (
                             <div className="flex flex-col gap-1.5 mt-2">
                               {Object.keys(
                                 exName === "LEG MASTER" 
@@ -886,7 +894,9 @@ export default function AsvandCalisthenicsPage() {
                                       ? PULL_PATHS
                                       : exName === "CORE MASTER"
                                         ? CORE_PATHS
-                                        : SKILLS_PATHS
+                                        : exName === "SKILLS MASTER"
+                                          ? SKILLS_PATHS
+                                          : ELITE_PATHS
                               ).map(pathKey => {
                                 const complete = isPathComplete(
                                   pathKey, 
@@ -898,7 +908,9 @@ export default function AsvandCalisthenicsPage() {
                                         ? "pull"
                                         : exName === "CORE MASTER"
                                           ? "core"
-                                          : "skills"
+                                          : exName === "SKILLS MASTER"
+                                            ? "skills"
+                                            : "elite"
                                 );
                                 return (
                                   <div key={pathKey} className="flex items-center gap-2 text-xs">
@@ -953,7 +965,7 @@ export default function AsvandCalisthenicsPage() {
                             <div>
                               <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Mastery Requirement</span>
                               <span className="text-xs font-bold text-white">
-                                {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER"
+                                {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER" || exName === "ELITE MASTER"
                                   ? `Complete all ${
                                       exName === "LEG MASTER" 
                                         ? "Leg" 
@@ -963,7 +975,9 @@ export default function AsvandCalisthenicsPage() {
                                             ? "Pull" 
                                             : exName === "CORE MASTER"
                                               ? "Core"
-                                              : "Skills"
+                                              : exName === "SKILLS MASTER"
+                                                ? "Skills"
+                                                : "Elite"
                                     } Mastery paths` 
                                   : ex.mastery_req}
                               </span>
@@ -1103,7 +1117,9 @@ export default function AsvandCalisthenicsPage() {
                                           ? PULL_PATHS
                                           : exName === "CORE MASTER"
                                             ? CORE_PATHS
-                                            : SKILLS_PATHS
+                                            : exName === "SKILLS MASTER"
+                                              ? SKILLS_PATHS
+                                              : ELITE_PATHS
                                   ).map(pathKey => {
                                     const complete = isPathComplete(
                                       pathKey, 
@@ -1115,7 +1131,9 @@ export default function AsvandCalisthenicsPage() {
                                             ? "pull"
                                             : exName === "CORE MASTER"
                                               ? "core"
-                                              : "skills"
+                                              : exName === "SKILLS MASTER"
+                                                ? "skills"
+                                                : "elite"
                                     );
                                     return (
                                       <div key={pathKey} className="flex items-center gap-1 text-xs">
@@ -1134,7 +1152,7 @@ export default function AsvandCalisthenicsPage() {
                               <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
                                 <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
                                 <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
-                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : exName === "PULL MASTER" ? "Pull Master" : exName === "CORE MASTER" ? "Core Master" : "Skills Master"} Title</span>
+                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : exName === "PULL MASTER" ? "Pull Master" : exName === "CORE MASTER" ? "Core Master" : exName === "SKILLS MASTER" ? "Skills Master" : "Elite Master"} Title</span>
                                   <span>⚡ +500 XP</span>
                                   <span>📚 Book Complete</span>
                                   <span>📜 Certificate Unlocked</span>
