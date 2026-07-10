@@ -430,6 +430,32 @@ export default function AsvandCalisthenicsPage() {
     init();
   }, []);
 
+  // Handle focus query parameter scroll/highlight
+  useEffect(() => {
+    if (loading || !asvandId) return;
+    const params = new URLSearchParams(window.location.search);
+    const bookParam = params.get("book");
+    const focusParam = params.get("focus");
+
+    if (bookParam && activeBook !== bookParam) {
+      setActiveBook(bookParam as any);
+    }
+
+    if (focusParam && activeBook === bookParam) {
+      const timer = setTimeout(() => {
+        const targetEl = document.getElementById(`exercise-card-${focusParam.replace(/\s+/g, "-")}`);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+          setTimeout(() => {
+            targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+          }, 3000);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, asvandId, activeBook]);
+
   // Compute total Calisthenics XP accumulated
   const totalCalisthenicsXp = useMemo(() => {
     let sum = 0;

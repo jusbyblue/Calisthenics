@@ -665,7 +665,13 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-primary">Calisthenics Guild</h1>
           </div>
           <button
-            onClick={() => router.push("/calisthenics")}
+            onClick={() => {
+              if (ongoingTarget) {
+                router.push(`/calisthenics?book=${ongoingTarget.item.path}&focus=${encodeURIComponent(ongoingTarget.item.name)}`);
+              } else {
+                router.push("/calisthenics");
+              }
+            }}
             className="px-4 py-2 bg-accent hover:bg-accent/80 text-white rounded-xl text-xs font-bold transition-all shadow-[0_0_10px_rgba(74,158,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           >
             Train Now ⚡
@@ -833,7 +839,10 @@ export default function Dashboard() {
 
         {/* 2. Ongoing Target Card */}
         {ongoingTarget ? (
-          <Card className="border border-accent/20 bg-accent/5">
+          <Card 
+            className="border border-accent/20 bg-accent/5 hover:border-accent/40 hover:bg-accent/10 transition-all cursor-pointer"
+            onClick={() => router.push(`/calisthenics?book=${ongoingTarget.item.path}&focus=${encodeURIComponent(ongoingTarget.item.name)}`)}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-accent tracking-wider uppercase">🎯 Ongoing Target</span>
               <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
@@ -923,17 +932,6 @@ export default function Dashboard() {
             </div>
           </Card>
         )}
-
-        {/* 4. Daily Streak Card */}
-        <Card className="border border-accent/20 bg-accent/5">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🔥</span>
-            <div>
-              <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Daily Streak</span>
-              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} {dailyStreak === 1 ? "Day" : "Days"}</h4>
-            </div>
-          </div>
-        </Card>
 
         {/* 5. Latest Milestone Card */}
         <Card className="border border-success/20 bg-success/5">
@@ -1060,39 +1058,6 @@ export default function Dashboard() {
                 <span className="text-sm font-bold text-accent mt-0.5 block">{masteredCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
               </div>
             </div>
-          </div>
-        </Card>
-
-        {/* 9. Completion Heatmap */}
-        <Card className="p-0 overflow-hidden border border-border bg-[#101018]">
-          <div className="p-4 border-b border-border/25">
-            <span className="label text-[10px] font-bold tracking-wider text-white">Completion Heatmap</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 bg-surface2/30">
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Book</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Foundation</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Strength</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Power</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Explosive</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Mastery</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/10">
-                {(["legs", "push", "pull", "core", "skills", "elite"] as const).map(book => (
-                  <tr key={book} className="hover:bg-surface2/10">
-                    <td className="p-2.5 font-bold text-white uppercase text-[10px]">{book}</td>
-                    <td className={`p-2.5 ${getHeatmapColorClass(getHeatmapVal(book, "Foundation"))}`}>{getHeatmapVal(book, "Foundation")}</td>
-                    <td className={`p-2.5 ${getHeatmapColorClass(getHeatmapVal(book, "Strength"))}`}>{getHeatmapVal(book, "Strength")}</td>
-                    <td className={`p-2.5 ${getHeatmapColorClass(getHeatmapVal(book, "Power"))}`}>{getHeatmapVal(book, "Power")}</td>
-                    <td className={`p-2.5 ${getHeatmapColorClass(getHeatmapVal(book, "Explosive"))}`}>{getHeatmapVal(book, "Explosive")}</td>
-                    <td className={`p-2.5 ${getHeatmapColorClass(getHeatmapVal(book, "Master"))}`}>{getHeatmapVal(book, "Master")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </Card>
 
