@@ -40,7 +40,7 @@ const CATEGORIES: Record<
       "Australian Row", "Inverted Row", "Air Squat", "Jump Squat", "Bulgarian Split Squat",
       "Walking Lunge", "Cossack Squat", "Pistol Squat", "Plank", "Side Plank", "Hollow Hold",
       "Arch Hold", "L-Sit", "V-Sit", "Burpees", "Mountain Climbers", "Box Jump", "Broad Jump",
-      "Wall Sit", "Farmer Carry (Bodyweight)"
+      "Wall Sit", "Dead Hang", "Wall Handstand Hold", "Crow Hold"
     ]
   },
   "Push": {
@@ -50,8 +50,9 @@ const CATEGORIES: Record<
       "Chest": [
         "Barbell Bench Press", "Incline Barbell Bench Press", "Decline Barbell Bench Press",
         "Dumbbell Bench Press", "Incline Dumbbell Press", "Decline Dumbbell Press",
-        "Machine Chest Press", "Smith Machine Bench Press", "Cable Fly", "Low Cable Fly",
-        "High Cable Fly", "Pec Deck Fly", "Push-up (Weighted)", "Dip (Weighted)"
+        "Machine Chest Press", "Machine Incline Press", "Machine Chest Fly", "Dip Machine",
+        "Smith Machine Bench Press", "Cable Fly", "Low Cable Fly", "High Cable Fly",
+        "Pec Deck Fly", "Push-up (Weighted)", "Dip (Weighted)"
       ],
       "Shoulders": [
         "Barbell Overhead Press", "Seated Barbell Press", "Dumbbell Shoulder Press", "Arnold Press",
@@ -71,7 +72,8 @@ const CATEGORIES: Record<
     subcategories: {
       "Vertical Pull": [
         "Pull-up (Weighted)", "Chin-up (Weighted)", "Neutral Pull-up",
-        "Lat Pulldown (Wide)", "Lat Pulldown (Close)", "Reverse Grip Pulldown", "Single Arm Lat Pulldown"
+        "Lat Pulldown (Wide)", "Lat Pulldown (Close)", "Reverse Grip Pulldown", "Single Arm Lat Pulldown",
+        "Cable Pullover", "Pull-over Machine"
       ],
       "Horizontal Pull": [
         "Barbell Row", "Pendlay Row", "T-Bar Row", "Seated Cable Row", "Chest Supported Row",
@@ -85,7 +87,7 @@ const CATEGORIES: Record<
         "Concentration Curl", "Preacher Curl", "Cable Curl", "Machine Curl", "Spider Curl"
       ],
       "Forearms": [
-        "Reverse Curl", "Wrist Curl", "Reverse Wrist Curl", "Farmer Carry", "Plate Pinch Hold", "Dead Hang", "Finger Curl"
+        "Reverse Curl", "Wrist Curl", "Reverse Wrist Curl", "Farmer Carry", "Plate Pinch Hold", "Finger Curl"
       ]
     }
   },
@@ -115,7 +117,8 @@ const CATEGORIES: Record<
     exercises: [
       "Plank", "Side Plank", "Reverse Plank", "Hollow Hold", "Arch Hold", "Dead Bug", "Bird Dog",
       "Russian Twist", "Leg Raise", "Hanging Knee Raise", "Hanging Leg Raise", "Toes to Bar",
-      "Dragon Flag", "L-Sit", "V-Sit", "Ab Wheel Rollout", "Cable Crunch", "Decline Sit-up"
+      "Dragon Flag", "L-Sit", "V-Sit", "Ab Wheel Rollout", "Standing Ab Wheel", "Plank Walkout",
+      "Pallof Press", "Cable Crunch", "Decline Sit-up"
     ]
   },
   "Cardio": {
@@ -123,15 +126,15 @@ const CATEGORIES: Record<
     defaultUnit: "min",
     exercises: [
       "Running (1km)", "Running (5km)", "Running (10km)", "Sprint (100m)", "Sprint (200m)",
-      "Cycling", "Rowing", "Stair Climber", "Swimming", "Jump Rope (Max)", "Burpees (1 min)", "Burpees (Max)"
+      "Cycling", "Rowing", "Assault Bike", "Stair Climber", "Swimming", "Jump Rope (Max)", "Burpees (1 min)", "Burpees (Max)"
     ]
   },
   "Skills": {
     emoji: "🤸",
     defaultUnit: "sec",
     exercises: [
-      "Handstand Hold", "Handstand Push-up", "Planche Lean", "Tuck Planche", "Advanced Tuck Planche",
-      "Straddle Planche", "Full Planche", "Front Lever", "Back Lever", "Human Flag", "Muscle-up",
+      "Handstand Hold", "One Arm Handstand", "Handstand Push-up", "Planche Lean", "Tuck Planche", "Advanced Tuck Planche",
+      "Straddle Planche", "Full Planche", "Front Lever", "Back Lever", "Human Flag", "L-Sit", "V-Sit", "Muscle-up",
       "Bar Muscle-up", "Ring Muscle-up", "Iron Cross", "Victorian", "Manna", "One Arm Pull-up", "One Arm Push-up"
     ]
   }
@@ -145,6 +148,7 @@ export default function PRPage() {
   // Database Data States
   const [prRecords, setPrRecords] = useState<PRRecord[]>([]);
   const [milestones, setMilestones] = useState<MilestoneRecord[]>([]);
+  const [weightLogs, setWeightLogs] = useState<{ date: string; weight_kg: number }[]>([]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>("Bodyweight");
 
   // Edit Panel States
@@ -184,33 +188,43 @@ export default function PRPage() {
 
   const loadData = async (profileId: string) => {
     try {
-      // 1. Load PR Logs
-      const { data: prData, error: prError } = await supabase
-        .from("pr_logs")
-        .select("*")
-        .eq("profile_id", profileId)
-        .order("date", { ascending: false });
-
-      if (prError) throw prError;
-      setPrRecords(prData || []);
-
-      // 2. Load Milestones (with fallback to LocalStorage if table doesn't exist yet)
-      try {
-        const { data: mData, error: mError } = await supabase
+      // 1. Load PR Logs, Milestones and Weight Logs in parallel
+      const [prRes, mRes, weightRes] = await Promise.all([
+        supabase
+          .from("pr_logs")
+          .select("*")
+          .eq("profile_id", profileId)
+          .order("date", { ascending: false }),
+        supabase
           .from("pr_milestones")
           .select("*")
-          .eq("profile_id", profileId);
-        
-        if (!mError && mData) {
-          setMilestones(mData || []);
-        } else {
-          loadMilestonesFromLocalStorage();
-        }
-      } catch (err) {
+          .eq("profile_id", profileId),
+        supabase
+          .from("health_logs")
+          .select("*")
+          .eq("profile_id", profileId)
+          .order("date", { ascending: false })
+      ]);
+
+      if (prRes.data) {
+        setPrRecords(prRes.data);
+      }
+
+      if (weightRes.data) {
+        setWeightLogs(weightRes.data.map((w: any) => ({
+          date: w.date,
+          weight_kg: Number(w.weight_kg)
+        })));
+      }
+
+      if (mRes.data) {
+        setMilestones(mRes.data);
+      } else {
         loadMilestonesFromLocalStorage();
       }
     } catch (err) {
       console.error("Error loading specs database:", err);
+      loadMilestonesFromLocalStorage();
     } finally {
       setLoading(false);
     }
@@ -271,6 +285,14 @@ export default function PRPage() {
     }
     init();
   }, []);
+
+  const getBwForDate = (dateStr: string) => {
+    const match = weightLogs.find(w => w.date === dateStr);
+    if (match) return `${match.weight_kg}kg`;
+    const beforeLogs = weightLogs.filter(w => w.date <= dateStr);
+    if (beforeLogs.length > 0) return `${beforeLogs[0].weight_kg}kg`;
+    return "N/A";
+  };
 
   // Compute Current PR for selected exercise
   const currentPrValue = useMemo(() => {
@@ -433,21 +455,37 @@ export default function PRPage() {
                         <div key={subName} className="flex flex-col gap-2 mt-2">
                           <p className="text-[10px] font-bold text-accent uppercase tracking-widest border-b border-border/20 pb-1">{subName}</p>
                           {list.map(ex => {
-                            const bestVal = prRecords.filter(r => r.exercise === ex).reduce((max, r) => (r.value > max ? r.value : max), 0);
-                            const unitVal = prRecords.find(r => r.exercise === ex)?.unit || catData.defaultUnit;
+                            const exLogs = prRecords.filter(r => r.exercise === ex);
+                            const bestLog = exLogs.length > 0 ? exLogs.reduce((best, current) => current.value > best.value ? current : best, exLogs[0]) : null;
+                            const unitVal = bestLog ? bestLog.unit : catData.defaultUnit;
                             const msRecord = milestones.find(m => m.exercise === ex);
 
                             return (
-                              <div key={ex} className="flex justify-between items-center py-1.5 border-b border-border/10 text-xs">
-                                <div>
-                                  <span className="text-white font-medium block">{ex}</span>
+                              <div key={ex} className="flex justify-between items-start py-2.5 border-b border-border/10 text-xs">
+                                <div className="flex-1 pr-2">
+                                  <span className="text-white font-semibold block">{ex}</span>
+                                  {bestLog && (
+                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[9px] text-secondary">
+                                      <span>Date: {bestLog.date}</span>
+                                      <span>•</span>
+                                      <span>BW: {getBwForDate(bestLog.date)}</span>
+                                      {bestLog.notes && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="italic">"{bestLog.notes}"</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
                                   {msRecord && (
-                                    <span className={`text-[9px] mt-0.5 font-bold ${msRecord.completed ? "text-success" : "text-warning"}`}>
+                                    <span className={`text-[9px] mt-1 font-bold block ${msRecord.completed ? "text-success" : "text-warning"}`}>
                                       Milestone: {msRecord.value} {unitVal} ({msRecord.completed ? "Done" : "In Progress"})
                                     </span>
                                   )}
                                 </div>
-                                <span className="font-bold text-accent">{bestVal > 0 ? `${bestVal} ${unitVal}` : "—"}</span>
+                                <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
+                                  {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
+                                </span>
                               </div>
                             );
                           })}
@@ -456,21 +494,37 @@ export default function PRPage() {
                     ) : (
                       <div className="flex flex-col gap-2.5 mt-2">
                         {catExercises.map(ex => {
-                          const bestVal = prRecords.filter(r => r.exercise === ex).reduce((max, r) => (r.value > max ? r.value : max), 0);
-                          const unitVal = prRecords.find(r => r.exercise === ex)?.unit || catData.defaultUnit;
+                          const exLogs = prRecords.filter(r => r.exercise === ex);
+                          const bestLog = exLogs.length > 0 ? exLogs.reduce((best, current) => current.value > best.value ? current : best, exLogs[0]) : null;
+                          const unitVal = bestLog ? bestLog.unit : catData.defaultUnit;
                           const msRecord = milestones.find(m => m.exercise === ex);
 
                           return (
-                            <div key={ex} className="flex justify-between items-center py-1.5 border-b border-border/10 text-xs">
-                              <div>
-                                <span className="text-white font-medium block">{ex}</span>
+                            <div key={ex} className="flex justify-between items-start py-2.5 border-b border-border/10 text-xs">
+                              <div className="flex-1 pr-2">
+                                <span className="text-white font-semibold block">{ex}</span>
+                                {bestLog && (
+                                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[9px] text-secondary">
+                                    <span>Date: {bestLog.date}</span>
+                                    <span>•</span>
+                                    <span>BW: {getBwForDate(bestLog.date)}</span>
+                                    {bestLog.notes && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="italic">"{bestLog.notes}"</span>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                                 {msRecord && (
-                                  <span className={`text-[9px] mt-0.5 font-bold ${msRecord.completed ? "text-success" : "text-warning"}`}>
+                                  <span className={`text-[9px] mt-1 font-bold block ${msRecord.completed ? "text-success" : "text-warning"}`}>
                                     Milestone: {msRecord.value} {unitVal} ({msRecord.completed ? "Done" : "In Progress"})
                                   </span>
                                 )}
                               </div>
-                              <span className="font-bold text-accent">{bestVal > 0 ? `${bestVal} ${unitVal}` : "—"}</span>
+                              <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
+                                {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
+                              </span>
                             </div>
                           );
                         })}
