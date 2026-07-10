@@ -713,37 +713,79 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Overall Completion Progress */}
-        <Card className="bg-[#121221]/90">
-          <CardLabel>Overall Completion</CardLabel>
-          <div className="flex items-center gap-6 mt-2">
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="relative w-16 h-16 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="32" cy="32" r="28" className="stroke-[#19192C]" strokeWidth="5.5" fill="transparent" />
-                  <circle cx="32" cy="32" r="28" className="stroke-accent" strokeWidth="5.5" fill="transparent"
-                    strokeDasharray={175.9}
-                    strokeDashoffset={175.9 - (175.9 * overallAverage) / 100}
-                  />
-                </svg>
-                <span className="absolute text-sm font-black text-white">{overallAverage}%</span>
-              </div>
-              <span className="text-[8px] text-secondary font-bold uppercase tracking-wider mt-1">{masteredCount} / {totalExercises} Mastered</span>
+        {/* 1. Today's Target Card */}
+        <Card className="border border-accent/20 bg-accent/5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-accent tracking-wider uppercase">Today's Target</span>
+            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+          </div>
+          <div className="mt-3 flex flex-col gap-2">
+            <div>
+              <span className="text-[10px] text-secondary uppercase block">Book Progress</span>
+              <span className="text-white font-black text-sm block mt-0.5">{weakestPathInfo.name}</span>
+              <span className="text-xs font-semibold text-accent block mt-1">
+                {currentBookProgress.masteredCount} / {currentBookProgress.totalCount} Mastered ({currentBookProgress.percent}%)
+              </span>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
-                <span className="text-[9px] text-secondary block uppercase">Learned</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{learnedCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
+            <div>
+              <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
+              <span className="text-white font-black text-sm block mt-0.5">{currentFocus.exercise}</span>
+            </div>
+            <div>
+              <span className="text-[10px] text-secondary uppercase block">Required Goal</span>
+              <span className="text-white font-bold text-xs block mt-0.5">{currentFocus.masteryReqText}</span>
+            </div>
+            <div className="flex gap-4 items-center mt-1">
+              <div className="flex-1">
+                <span className="text-[10px] text-secondary uppercase block mb-1">Mastery Progress</span>
+                <ProgressBar value={currentFocus.mastery} color="var(--accent)" height={4} />
               </div>
-              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
-                <span className="text-[9px] text-secondary block uppercase">Mastered</span>
-                <span className="text-sm font-bold text-accent mt-0.5 block">{masteredCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
-              </div>
+              <span className="text-xs font-bold text-white bg-surface2 px-2.5 py-1 rounded-lg border border-border/20">{currentFocus.mastery}%</span>
             </div>
           </div>
         </Card>
 
-        {/* Where Am I? - Mastery Paths */}
+        {/* 2. Active Targets Card */}
+        {((activeTargets && activeTargets.length > 0) || weightTarget) && (
+          <Card className="bg-[#121221]/90">
+            <CardLabel>🎯 Active Targets</CardLabel>
+            <div className="flex flex-col gap-3.5 mt-2">
+              {weightTarget && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-white flex items-center gap-1.5">⚖️ Weight</span>
+                    <span className="text-secondary">{weightTarget.current} / {weightTarget.target} {weightTarget.unit}</span>
+                  </div>
+                  <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                    <div
+                      className="bg-accent h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, (weightTarget.current / weightTarget.target) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {activeTargets.map((tg) => {
+                const percent = Math.min(100, Math.max(0, Math.round((tg.currentValue / tg.targetValue) * 100)));
+                return (
+                  <div key={tg.exercise} className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-white">{tg.exercise}</span>
+                      <span className="text-secondary">{tg.currentValue} / {tg.targetValue} {tg.unit}</span>
+                    </div>
+                    <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${tg.completed ? 'bg-success' : 'bg-accent'}`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
+        {/* 3. Mastery Paths */}
         <Card className="flex flex-col gap-3">
           <CardLabel>Mastery Paths</CardLabel>
           
@@ -848,89 +890,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Active Targets Card */}
-        {((activeTargets && activeTargets.length > 0) || weightTarget) && (
-          <Card className="bg-[#121221]/90">
-            <CardLabel>🎯 Active Targets</CardLabel>
-            <div className="flex flex-col gap-3.5 mt-2">
-              {weightTarget && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-white flex items-center gap-1.5">⚖️ Weight</span>
-                    <span className="text-secondary">{weightTarget.current} / {weightTarget.target} {weightTarget.unit}</span>
-                  </div>
-                  <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
-                    <div
-                      className="bg-accent h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.max(0, (weightTarget.current / weightTarget.target) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-              {activeTargets.map((tg) => {
-                const percent = Math.min(100, Math.max(0, Math.round((tg.currentValue / tg.targetValue) * 100)));
-                return (
-                  <div key={tg.exercise} className="flex flex-col gap-1">
-                    <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-white">{tg.exercise}</span>
-                      <span className="text-secondary">{tg.currentValue} / {tg.targetValue} {tg.unit}</span>
-                    </div>
-                    <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${tg.completed ? 'bg-success' : 'bg-accent'}`}
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        )}
-
-        {/* What Should I Do Next? - Today's Target Card */}
-        <Card className="border border-accent/20 bg-accent/5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-accent tracking-wider uppercase">Today's Target</span>
-            <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
-          </div>
-          <div className="mt-3 flex flex-col gap-2">
-            <div>
-              <span className="text-[10px] text-secondary uppercase block">Exercises Mastered</span>
-              <span className="text-white font-bold text-xs block mt-0.5">{currentBookProgress.masteredCount} / {currentBookProgress.totalCount}</span>
-              <span className="text-[10px] text-secondary uppercase block mt-2.5">Book Progress</span>
-              <span className="text-white font-black text-sm block mt-0.5">{currentBookProgress.percent}%</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
-              <span className="text-white font-black text-sm block mt-0.5">{currentFocus.exercise}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-secondary uppercase block">Required Goal</span>
-              <span className="text-white font-bold text-xs block mt-0.5">{currentFocus.masteryReqText}</span>
-            </div>
-            <div className="flex gap-4 items-center mt-1">
-              <div className="flex-1">
-                <span className="text-[10px] text-secondary uppercase block mb-1">Mastery Progress</span>
-                <ProgressBar value={currentFocus.mastery} color="var(--accent)" height={4} />
-              </div>
-              <span className="text-xs font-bold text-white bg-surface2 px-2.5 py-1 rounded-lg border border-border/20">{currentFocus.mastery}%</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Daily Streak Card */}
-        <Card className="border border-accent/20 bg-accent/5">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🔥</span>
-            <div>
-              <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Daily Streak</span>
-              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} {dailyStreak === 1 ? "Day" : "Days"}</h4>
-            </div>
-          </div>
-        </Card>
-
-        {/* Next Milestone Card */}
+        {/* 4. Next Milestone Card */}
         <Card className="border border-accent/20 bg-[#121221]/95">
           <CardLabel>Next Milestone</CardLabel>
           <div className="mt-2.5 flex flex-col gap-2">
@@ -945,7 +905,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Latest Milestone Card */}
+        {/* 5. Latest Milestone Card */}
         <Card className="border border-success/20 bg-success/5">
           <CardLabel className="text-success">🏆 Latest Milestone</CardLabel>
           <div className="mt-2.5 flex flex-col gap-2.5">
@@ -972,7 +932,70 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Lifetime Stats */}
+        {/* 6. Daily Streak Card */}
+        <Card className="border border-accent/20 bg-accent/5">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <span className="text-[10px] text-secondary uppercase font-bold tracking-wider">Daily Streak</span>
+              <h4 className="text-base font-black text-white mt-0.5">{dailyStreak} {dailyStreak === 1 ? "Day" : "Days"}</h4>
+            </div>
+          </div>
+        </Card>
+
+        {/* 7. Overall Completion Progress */}
+        <Card className="bg-[#121221]/90">
+          <CardLabel>Overall Completion</CardLabel>
+          <div className="flex items-center gap-6 mt-2">
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="32" cy="32" r="28" className="stroke-[#19192C]" strokeWidth="5.5" fill="transparent" />
+                  <circle cx="32" cy="32" r="28" className="stroke-accent" strokeWidth="5.5" fill="transparent"
+                    strokeDasharray={175.9}
+                    strokeDashoffset={175.9 - (175.9 * overallAverage) / 100}
+                  />
+                </svg>
+                <span className="absolute text-sm font-black text-white">{overallAverage}%</span>
+              </div>
+              <span className="text-[8px] text-secondary font-bold uppercase tracking-wider mt-1">{masteredCount} / {totalExercises} Mastered</span>
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
+                <span className="text-[9px] text-secondary block uppercase">Learned</span>
+                <span className="text-sm font-bold text-white mt-0.5 block">{learnedCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
+              </div>
+              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
+                <span className="text-[9px] text-secondary block uppercase">Mastered</span>
+                <span className="text-sm font-bold text-accent mt-0.5 block">{masteredCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* 8. Weakest Path & Recommendation */}
+        <Card className="border border-[#FF4A4A]/25 bg-[#FF4A4A]/5">
+          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Next Training</CardLabel>
+          <div className="mt-2 flex flex-col gap-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-white font-bold text-sm">{weakestPathInfo.name}</span>
+              <span className="text-xs font-bold text-[#FF4A4A] bg-[#FF4A4A]/10 px-2.5 py-0.5 rounded-lg border border-[#FF4A4A]/20">{weakestPathInfo.avg}%</span>
+            </div>
+            <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1.5 flex flex-col gap-1">
+              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended Next Training</span>
+              {recommendedToday.map((rec, i) => (
+                <div key={rec.name || i} className="flex justify-between items-center text-xs py-0.5">
+                  <span className="text-white font-semibold flex items-center gap-1.5">
+                    <span className="text-[9px] text-accent">●</span> {rec.name}
+                  </span>
+                  <span className="text-secondary/70 font-mono text-[10px]">{rec.mastery_req}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* 9. Lifetime Stats */}
         <Card>
           <CardLabel>Lifetime Stats</CardLabel>
           <div className="grid grid-cols-2 gap-4 mt-2">
@@ -1021,29 +1044,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Weakest Path & Recommendation */}
-        <Card className="border border-[#FF4A4A]/25 bg-[#FF4A4A]/5">
-          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Next Training</CardLabel>
-          <div className="mt-2 flex flex-col gap-1.5">
-            <div className="flex justify-between items-center">
-              <span className="text-white font-bold text-sm">{weakestPathInfo.name}</span>
-              <span className="text-xs font-bold text-[#FF4A4A] bg-[#FF4A4A]/10 px-2.5 py-0.5 rounded-lg border border-[#FF4A4A]/20">{weakestPathInfo.avg}%</span>
-            </div>
-            <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1.5 flex flex-col gap-1">
-              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended Next Training</span>
-              {recommendedToday.map((rec, i) => (
-                <div key={rec.name || i} className="flex justify-between items-center text-xs py-0.5">
-                  <span className="text-white font-semibold flex items-center gap-1.5">
-                    <span className="text-[9px] text-accent">●</span> {rec.name}
-                  </span>
-                  <span className="text-secondary/70 font-mono text-[10px]">{rec.mastery_req}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* Completion Heatmap */}
+        {/* 10. Completion Heatmap */}
         <Card className="p-0 overflow-hidden border border-border bg-[#101018]">
           <div className="p-4 border-b border-border/25">
             <span className="label text-[10px] font-bold tracking-wider text-white">Completion Heatmap</span>
@@ -1076,7 +1077,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Cross-Book Master Tech Chain */}
+        {/* 11. Cross-Book Master Tech Chain */}
         <Card>
           <CardLabel>Cross-Book Master Tech Chain</CardLabel>
           <div className="flex flex-col gap-2.5 mt-2">
