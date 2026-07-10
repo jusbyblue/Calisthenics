@@ -182,40 +182,49 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Impossible Pull-up", path: "pull", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["One-Arm Pull-up", "Front Lever Pull-up"] },
   { name: "PULL MASTER", path: "pull", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["One-Arm Pull-up", "Weighted Muscle-up", "Full Back Lever", "Impossible Pull-up"] },
 
-  // Core (33 items)
-  { name: "Plank", path: "core", unlock_req: "Hold 30s", mastery_req: "Hold 90s", target_reps: 90 },
-  { name: "Side Plank", path: "core", unlock_req: "Hold 20s", mastery_req: "Hold 60s", target_reps: 60 },
-  { name: "Lying Leg Raise", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Hollow Body Hold", path: "core", unlock_req: "Hold 15s", mastery_req: "Hold 45s", target_reps: 45 },
-  { name: "Arch Hold", path: "core", unlock_req: "Hold 15s", mastery_req: "Hold 45s", target_reps: 45 },
-  { name: "Knee Raise (Hanging)", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Leg Raise (Hanging)", path: "core", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Windshield Wiper Assist", path: "core", unlock_req: "3 × 6", mastery_req: "3 × 12", target_reps: 12 },
-  { name: "Windshield Wiper", path: "core", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Toes to Bar", path: "core", unlock_req: "3 × 4", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "L-Sit (Parallel Bars)", path: "core", unlock_req: "Hold 5s", mastery_req: "Hold 15s", target_reps: 15 },
-  { name: "L-Sit (Floor)", path: "core", unlock_req: "Hold 3s", mastery_req: "Hold 12s", target_reps: 12 },
-  { name: "V-Sit", path: "core", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "Manna Assist", path: "core", unlock_req: "Hold 3s", mastery_req: "Hold 10s", target_reps: 10 },
-  { name: "Manna Hold", path: "core", unlock_req: "Hold 1s", mastery_req: "Hold 5s", target_reps: 5 },
-  { name: "Dragon Flag Assist", path: "core", unlock_req: "3 × 4", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Dragon Flag", path: "core", unlock_req: "3 × 3", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Human Flag Tuck Core", path: "core", unlock_req: "Hold 3s", mastery_req: "Hold 10s", target_reps: 10 },
-  { name: "Human Flag Straddle Core", path: "core", unlock_req: "Hold 2s", mastery_req: "Hold 8s", target_reps: 8 },
-  { name: "Human Flag Hold Core", path: "core", unlock_req: "Hold 1s", mastery_req: "Hold 5s", target_reps: 5 },
-  { name: "Ab Wheel Rollout (Knees)", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Ab Wheel Rollout (Feet)", path: "core", unlock_req: "3 × 3", mastery_req: "3 × 8", target_reps: 8 },
-  { name: "Standing Cable Crunch", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Russian Twist (Weighted)", path: "core", unlock_req: "3 × 10", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Hanging Rotational Raise", path: "core", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Core Twister", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Reverse Hyperextension", path: "core", unlock_req: "3 × 10", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Superman Hold", path: "core", unlock_req: "Hold 15s", mastery_req: "Hold 45s", target_reps: 45 },
-  { name: "Bird Dog", path: "core", unlock_req: "3 × 10", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Pallof Press", path: "core", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Plank Walkout", path: "core", unlock_req: "3 × 5", mastery_req: "3 × 10", target_reps: 10 },
-  { name: "Core Master (Plank Max)", path: "core", unlock_req: "Hold 60s", mastery_req: "Hold 120s", target_reps: 120 },
-  { name: "CORE MASTER", path: "core", unlock_req: "1 × 1", mastery_req: "1 × 1", target_reps: 1 },
+  // Core (27 items)
+  // Foundation Branch
+  { name: "Plank", path: "core", mastery_req: "Hold 90s", target_reps: 90, prerequisites: [] },
+  { name: "Lying Leg Raise", path: "core", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Plank"] },
+  { name: "Hollow Body Hold", path: "core", mastery_req: "Hold 45s", target_reps: 45, prerequisites: ["Lying Leg Raise"] },
+  { name: "Arch Hold", path: "core", mastery_req: "Hold 45s", target_reps: 45, prerequisites: ["Hollow Body Hold"] },
+
+  // Hanging Core Branch
+  { name: "Knee Raise (Hanging)", path: "core", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Hollow Body Hold"] },
+  { name: "Leg Raise (Hanging)", path: "core", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Knee Raise (Hanging)"] },
+  { name: "Toes to Bar", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Leg Raise (Hanging)"] },
+  { name: "Hanging Rotational Raise", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Leg Raise (Hanging)"] },
+
+  // Compression Branch
+  { name: "L-Sit (Parallel Bars)", path: "core", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Hollow Body Hold", "Leg Raise (Hanging)"] },
+  { name: "L-Sit (Floor)", path: "core", mastery_req: "Hold 12s", target_reps: 12, prerequisites: ["L-Sit (Parallel Bars)"] },
+  { name: "V-Sit", path: "core", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["L-Sit (Floor)"] },
+  { name: "Manna Assist", path: "core", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["V-Sit"] },
+  { name: "Manna Hold", path: "core", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Manna Assist"] },
+
+  // Rotation Branch
+  { name: "Side Plank", path: "core", mastery_req: "Hold 60s", target_reps: 60, prerequisites: [] },
+  { name: "Windshield Wiper Assist", path: "core", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Side Plank"] },
+  { name: "Windshield Wiper", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Windshield Wiper Assist"] },
+
+  // Extension Branch
+  { name: "Bird Dog", path: "core", mastery_req: "3 × 20", target_reps: 20, prerequisites: [] },
+  { name: "Superman Hold", path: "core", mastery_req: "Hold 45s", target_reps: 45, prerequisites: ["Bird Dog"] },
+  { name: "Reverse Hyperextension", path: "core", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Superman Hold"] },
+
+  // Anti Rotation Branch
+  { name: "Pallof Press", path: "core", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Side Plank"] },
+  { name: "Plank Walkout", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Pallof Press"] },
+
+  // Advanced Strength Branch
+  { name: "Dragon Flag Assist", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Hollow Body Hold"] },
+  { name: "Dragon Flag", path: "core", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Dragon Flag Assist"] },
+  { name: "Ab Wheel Rollout (Knees)", path: "core", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Dragon Flag"] },
+  { name: "Ab Wheel Rollout (Feet)", path: "core", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Ab Wheel Rollout (Knees)"] },
+
+  // Mastery Endpoints
+  { name: "Core Master (Plank Max)", path: "core", mastery_req: "Hold 120s", target_reps: 120, prerequisites: ["Arch Hold", "Toes to Bar", "L-Sit (Floor)", "Windshield Wiper", "Reverse Hyperextension", "Plank Walkout", "Ab Wheel Rollout (Knees)"] },
+  { name: "CORE MASTER", path: "core", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["Core Master (Plank Max)", "Manna Hold", "Dragon Flag", "Ab Wheel Rollout (Feet)"] },
 
   // Skills & Balance (15 items)
   { name: "Crow Pose Hold", path: "skills", unlock_req: "Hold 10s", mastery_req: "Hold 30s", target_reps: 30 },
@@ -271,6 +280,16 @@ const PULL_PATHS = {
   "Front Lever": ["Skin the Cat", "Tuck Front Lever", "Advanced Tuck Front Lever", "Straddle Front Lever", "Full Front Lever", "Front Lever Pull-up"],
   "Back Lever": ["Tuck Back Lever", "Advanced Tuck Back Lever", "Straddle Back Lever", "Full Back Lever"],
   "Elite": ["Impossible Pull-up"]
+} as const;
+
+const CORE_PATHS = {
+  "Foundation": ["Plank", "Lying Leg Raise", "Hollow Body Hold", "Arch Hold"],
+  "Hanging": ["Knee Raise (Hanging)", "Leg Raise (Hanging)", "Toes to Bar", "Hanging Rotational Raise"],
+  "Compression": ["L-Sit (Parallel Bars)", "L-Sit (Floor)", "V-Sit", "Manna Assist", "Manna Hold"],
+  "Rotation": ["Side Plank", "Windshield Wiper Assist", "Windshield Wiper"],
+  "Extension": ["Bird Dog", "Superman Hold", "Reverse Hyperextension"],
+  "Anti Rotation": ["Side Plank", "Pallof Press", "Plank Walkout"],
+  "Advanced": ["Dragon Flag Assist", "Dragon Flag", "Ab Wheel Rollout (Knees)", "Ab Wheel Rollout (Feet)"]
 } as const;
 
 function getXpForDifficulty(difficulty: number): number {
@@ -462,6 +481,9 @@ export default function AsvandCalisthenicsPage() {
     if (exName === "PULL MASTER") {
       return Object.keys(PULL_PATHS).every(pathKey => isPathComplete(pathKey, "pull"));
     }
+    if (exName === "CORE MASTER") {
+      return Object.keys(CORE_PATHS).every(pathKey => isPathComplete(pathKey, "core"));
+    }
     const item = GUILD_CATALOG.find(x => x.name === exName);
     if (!item) return false;
     
@@ -481,16 +503,19 @@ export default function AsvandCalisthenicsPage() {
   };
 
   // Helper to check if a specific progression branch is fully completed
-  const isPathComplete = (pathName: string, book: "legs" | "push" | "pull") => {
+  const isPathComplete = (pathName: string, book: "legs" | "push" | "pull" | "core") => {
     if (book === "legs") {
       const p = pathName as keyof typeof LEG_PATHS;
-      return LEG_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
+      return LEG_PATHS[p]?.every(isExerciseMastered) || false;
     } else if (book === "push") {
       const p = pathName as keyof typeof PUSH_PATHS;
-      return PUSH_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
-    } else {
+      return PUSH_PATHS[p]?.every(isExerciseMastered) || false;
+    } else if (book === "pull") {
       const p = pathName as keyof typeof PULL_PATHS;
-      return PULL_PATHS[p]?.every(exName => isExerciseMastered(exName)) || false;
+      return PULL_PATHS[p]?.every(isExerciseMastered) || false;
+    } else {
+      const p = pathName as keyof typeof CORE_PATHS;
+      return CORE_PATHS[p]?.every(isExerciseMastered) || false;
     }
   };
 
@@ -816,14 +841,16 @@ export default function AsvandCalisthenicsPage() {
                         /* Locked Exercise Layout: Show Prerequisite Checklist */
                         <div className="mt-1">
                           <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-0.5">Requirements</span>
-                          {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" ? (
+                          {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" ? (
                             <div className="flex flex-col gap-1.5 mt-2">
                               {Object.keys(
                                 exName === "LEG MASTER" 
                                   ? LEG_PATHS 
                                   : exName === "PUSH MASTER" 
                                     ? PUSH_PATHS 
-                                    : PULL_PATHS
+                                    : exName === "PULL MASTER"
+                                      ? PULL_PATHS
+                                      : CORE_PATHS
                               ).map(pathKey => {
                                 const complete = isPathComplete(
                                   pathKey, 
@@ -831,7 +858,9 @@ export default function AsvandCalisthenicsPage() {
                                     ? "legs" 
                                     : exName === "PUSH MASTER" 
                                       ? "push" 
-                                      : "pull"
+                                      : exName === "PULL MASTER"
+                                        ? "pull"
+                                        : "core"
                                 );
                                 return (
                                   <div key={pathKey} className="flex items-center gap-2 text-xs">
@@ -1022,7 +1051,9 @@ export default function AsvandCalisthenicsPage() {
                                       ? LEG_PATHS 
                                       : exName === "PUSH MASTER" 
                                         ? PUSH_PATHS 
-                                        : PULL_PATHS
+                                        : exName === "PULL MASTER"
+                                          ? PULL_PATHS
+                                          : CORE_PATHS
                                   ).map(pathKey => {
                                     const complete = isPathComplete(
                                       pathKey, 
@@ -1030,7 +1061,9 @@ export default function AsvandCalisthenicsPage() {
                                         ? "legs" 
                                         : exName === "PUSH MASTER" 
                                           ? "push" 
-                                          : "pull"
+                                          : exName === "PULL MASTER"
+                                            ? "pull"
+                                            : "core"
                                     );
                                     return (
                                       <div key={pathKey} className="flex items-center gap-1 text-xs">
@@ -1049,7 +1082,7 @@ export default function AsvandCalisthenicsPage() {
                               <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
                                 <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
                                 <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
-                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : "Pull Master"} Title</span>
+                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : exName === "PULL MASTER" ? "Pull Master" : "Core Master"} Title</span>
                                   <span>⚡ +500 XP</span>
                                   <span>📚 Book Complete</span>
                                   <span>📜 Certificate Unlocked</span>
