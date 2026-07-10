@@ -165,7 +165,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "One-Arm Pull-up", path: "pull", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["One-Arm Negative"] },
 
   // Front Lever Branch
-  { name: "Skin the Cat", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: [] },
+  { name: "Skin the Cat", path: "pull", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Standard Pull-up", "L-Sit Pull-up"] },
   { name: "Tuck Front Lever", path: "pull", mastery_req: "Hold 15s", target_reps: 15, prerequisites: ["Skin the Cat"] },
   { name: "Advanced Tuck Front Lever", path: "pull", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Tuck Front Lever"] },
   { name: "Straddle Front Lever", path: "pull", mastery_req: "Hold 8s", target_reps: 8, prerequisites: ["Advanced Tuck Front Lever"] },
