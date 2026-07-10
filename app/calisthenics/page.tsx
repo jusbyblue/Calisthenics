@@ -86,7 +86,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Decline Push-up", path: "push", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Standard Push-up"] },
   { name: "Ring Push-up", path: "push", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Standard Push-up"] },
   { name: "Deep Ring Push-up", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Ring Push-up"] },
-  { name: "Diamond Push-up", path: "push", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Wide Push-up"] },
+  { name: "Diamond Push-up", path: "push", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Standard Push-up"] },
   { name: "Archer Push-up", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Diamond Push-up"] },
   { name: "Pseudo Planche Push-up", path: "push", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Archer Push-up"] },
   { name: "One-Arm Incline Push-up", path: "push", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Pseudo Planche Push-up"] },
@@ -95,7 +95,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   // Dip Branch
   { name: "Dips (Bench)", path: "push", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Standard Push-up"] },
   { name: "Standard Dips", path: "push", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Dips (Bench)"] },
-  { name: "Ring Dips", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Standard Dips"] },
+  { name: "Ring Dips", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Standard Dips", "Deep Ring Push-up"] },
   { name: "Weighted Dips", path: "push", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Ring Dips"] },
 
   // Explosive Branch
@@ -104,7 +104,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Explosive Dips", path: "push", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Superman Push-up"] },
 
   // Handstand Branch
-  { name: "Pike Push-up", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Standard Push-up"] },
+  { name: "Pike Push-up", path: "push", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Decline Push-up"] },
   { name: "Elevated Pike Push-up", path: "push", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Pike Push-up"] },
   { name: "Wall Handstand Kick-up", path: "push", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Elevated Pike Push-up"] },
   { name: "Wall Handstand Hold", path: "push", mastery_req: "Hold 30s", target_reps: 30, prerequisites: ["Wall Handstand Kick-up"] },
@@ -242,11 +242,12 @@ const LEG_PATHS = {
 
 const PUSH_PATHS = {
   "Foundation": ["Wall Push-up", "High Incline Push-up", "Incline Push-up", "Knee Push-up", "Negative Push-up", "Standard Push-up"],
-  "Strength": ["Wide Push-up", "Decline Push-up", "Ring Push-up", "Deep Ring Push-up", "Diamond Push-up", "Archer Push-up", "Pseudo Planche Push-up", "One-Arm Incline Push-up", "One-Arm Push-up"],
+  "Strength": ["Wide Push-up", "Ring Push-up", "Deep Ring Push-up", "Diamond Push-up", "Archer Push-up", "Pseudo Planche Push-up", "One-Arm Incline Push-up", "One-Arm Push-up"],
   "Dips": ["Dips (Bench)", "Standard Dips", "Ring Dips", "Weighted Dips"],
   "Explosive": ["Clap Push-up", "Superman Push-up", "Explosive Dips"],
-  "Handstand": ["Pike Push-up", "Elevated Pike Push-up", "Wall Handstand Kick-up", "Wall Handstand Hold", "Handstand Wall Walk", "Handstand Shoulder Tap", "Freestanding Handstand Hold", "Handstand Push-up"],
-  "Planche": ["Planche Lean", "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean", "Straddle Planche Hold", "Full Planche"]
+  "Handstand": ["Decline Push-up", "Pike Push-up", "Elevated Pike Push-up", "Wall Handstand Kick-up", "Wall Handstand Hold", "Handstand Wall Walk", "Handstand Shoulder Tap", "Freestanding Handstand Hold", "Handstand Push-up"],
+  "Planche": ["Planche Lean", "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean", "Straddle Planche Hold", "Full Planche"],
+  "Elite": ["90 Degree Push-up", "L-Sit to Handstand Press", "One-Arm Handstand"]
 } as const;
 
 function getXpForDifficulty(difficulty: number): number {
