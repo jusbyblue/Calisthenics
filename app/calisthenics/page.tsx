@@ -430,11 +430,11 @@ export default function AsvandCalisthenicsPage() {
   const coreAvg = getPathAvg("core");
   const baseFourAvg = Math.round((legsAvg + pushAvg + pullAvg + coreAvg) / 4);
 
-  const skillsLocked = baseFourAvg < 60;
-  const skillsAvg = skillsLocked ? 0 : getPathAvg("skills");
+  const skillsLocked = false;
+  const skillsAvg = getPathAvg("skills");
 
-  const eliteLocked = baseFourAvg < 100 || skillsAvg < 100;
-  const eliteAvg = eliteLocked ? 0 : getPathAvg("elite");
+  const eliteLocked = false;
+  const eliteAvg = getPathAvg("elite");
 
   // Helper to check if a prerequisite rule is met
   const isRuleMet = (rule: string[] | PrereqRule | undefined): boolean => {
