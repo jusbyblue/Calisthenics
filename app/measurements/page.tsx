@@ -44,13 +44,12 @@ export default function AsvandMeasurementsPage() {
   // States
   const [records, setRecords] = useState<MeasurementRecord[]>([]);
   const [goals, setGoals] = useState<Record<string, number>>({});
-  const [expandedKey, setExpandedKey] = useState<string | null>(null);
-
-  // Edit/Log Inline States
-  const [logValue, setLogValue] = useState("");
-  const [goalValue, setGoalValue] = useState("");
+  
+  // Modal Edit States
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formCurrents, setFormCurrents] = useState<Record<string, string>>({});
+  const [formGoals, setFormGoals] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ key: string; type: "success" | "error"; text: string } | null>(null);
 
   const loadData = async (profileId: string) => {
     try {
@@ -95,69 +94,6 @@ export default function AsvandMeasurementsPage() {
     init();
   }, []);
 
-  const handleSaveConfig = async (key: keyof Omit<MeasurementRecord, "id" | "date">) => {
-    if (!asvandId) return;
-    setSubmitting(true);
-    setStatusMsg(null);
-
-    try {
-      const todayStr = new Date().toISOString().split("T")[0];
-
-      // Update Local Goal if provided
-      if (goalValue.trim() !== "") {
-        const goalNum = parseFloat(goalValue);
-        if (!isNaN(goalNum) && goalNum > 0) {
-          const updatedGoals = { ...goals, [key]: goalNum };
-          setGoals(updatedGoals);
-          localStorage.setItem("calisthenics_measurement_goals", JSON.stringify(updatedGoals));
-        }
-      }
-
-      // Log Today's Measurement if provided
-      if (logValue.trim() !== "") {
-        const logNum = parseFloat(logValue);
-        if (!isNaN(logNum) && logNum > 0) {
-          // Fetch existing record for today
-          const { data: existing } = await supabase
-            .from("measurements")
-            .select("*")
-            .eq("profile_id", asvandId)
-            .eq("date", todayStr)
-            .maybeSingle();
-
-          const updateFields = {
-            profile_id: asvandId,
-            date: todayStr,
-            [key]: logNum
-          };
-
-          if (existing) {
-            const { error } = await supabase
-              .from("measurements")
-              .update(updateFields)
-              .eq("id", existing.id);
-            if (error) throw error;
-          } else {
-            const { error } = await supabase
-              .from("measurements")
-              .insert(updateFields);
-            if (error) throw error;
-          }
-        }
-      }
-
-      setStatusMsg({ key, type: "success", text: "Successfully saved!" });
-      setLogValue("");
-      setGoalValue("");
-      loadData(asvandId);
-      setTimeout(() => setStatusMsg(null), 3000);
-    } catch (err: any) {
-      setStatusMsg({ key, type: "error", text: err.message || "Failed to save data" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   const getStats = (key: keyof Omit<MeasurementRecord, "id" | "date">, config: MeasurementConfig) => {
     const values = records
       .map(r => r[key] as number | null)
@@ -169,10 +105,84 @@ export default function AsvandMeasurementsPage() {
     const best = config.isLossGoal ? lowest : highest;
     const goal = goals[key] || null;
 
-    // Dynamic loss goal check for weight (if goal is lower than current)
-    const isLoss = config.isLossGoal || (key === "weight_kg" && goal && current && current > goal);
+    return { current, highest, lowest, best, goal };
+  };
 
-    return { current, highest, lowest, best, goal, isLoss };
+  const openEditModal = () => {
+    const currentValues: Record<string, string> = {};
+    const goalValues: Record<string, string> = {};
+    
+    MEASUREMENT_CONFIGS.forEach(cfg => {
+      const { current, goal } = getStats(cfg.key, cfg);
+      currentValues[cfg.key] = current ? String(current) : "";
+      goalValues[cfg.key] = goal ? String(goal) : "";
+    });
+    
+    setFormCurrents(currentValues);
+    setFormGoals(goalValues);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveAll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!asvandId) return;
+    setSubmitting(true);
+
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+
+      // 1. Save goals to local storage
+      const newGoals: Record<string, number> = {};
+      MEASUREMENT_CONFIGS.forEach(cfg => {
+        const val = parseFloat(formGoals[cfg.key]);
+        if (!isNaN(val) && val > 0) {
+          newGoals[cfg.key] = val;
+        }
+      });
+      setGoals(newGoals);
+      localStorage.setItem("calisthenics_measurement_goals", JSON.stringify(newGoals));
+
+      // 2. Fetch existing measurements record for today
+      const { data: existing } = await supabase
+        .from("measurements")
+        .select("*")
+        .eq("profile_id", asvandId)
+        .eq("date", todayStr)
+        .maybeSingle();
+
+      const updateFields: any = {
+        profile_id: asvandId,
+        date: todayStr
+      };
+
+      MEASUREMENT_CONFIGS.forEach(cfg => {
+        const currentVal = parseFloat(formCurrents[cfg.key]);
+        // If there's an input value, use it. Otherwise, carry over from existing today's record, or keep null.
+        updateFields[cfg.key] = !isNaN(currentVal) && currentVal > 0 
+          ? currentVal 
+          : (existing ? existing[cfg.key] : null);
+      });
+
+      if (existing) {
+        const { error } = await supabase
+          .from("measurements")
+          .update(updateFields)
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("measurements")
+          .insert(updateFields);
+        if (error) throw error;
+      }
+
+      setIsEditOpen(false);
+      loadData(asvandId);
+    } catch (err) {
+      console.error("Error saving measurements:", err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -187,187 +197,122 @@ export default function AsvandMeasurementsPage() {
   return (
     <div className="page" style={{ background: "var(--bg)" }}>
       <div className="page-content pb-28">
+        
         {/* Header */}
-        <div className="flex items-center gap-3 mb-5 pt-2">
-          <button
-            onClick={() => router.push("/")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#1A1A1A] border border-[#2A2A2A] text-white active:scale-95 transition-all"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white leading-none">Body Specs</h1>
-            <p className="text-[10px] text-secondary mt-1">Track body dimensions and physical goals</p>
+        <div className="flex justify-between items-center mb-5 pt-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push("/")}
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#1A1A1A] border border-[#2A2A2A] text-white active:scale-95 transition-all"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-white leading-none">Body Specs</h1>
+              <p className="text-[10px] text-secondary mt-1">Track body dimensions and physical goals</p>
+            </div>
           </div>
+          
+          <button
+            onClick={openEditModal}
+            className="px-4 py-2 text-xs font-bold text-[#000] bg-accent rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all shadow-[0_0_10px_rgba(74,158,255,0.2)]"
+          >
+            Edit
+          </button>
         </div>
 
-        {/* Spec Cards list */}
-        <div className="flex flex-col gap-3.5 mb-6">
+        {/* Spec Cards Grid */}
+        <div className="grid grid-cols-2 gap-3.5">
           {MEASUREMENT_CONFIGS.map(cfg => {
-            const { current, highest, lowest, best, goal, isLoss } = getStats(cfg.key, cfg);
-            const isExpanded = expandedKey === cfg.key;
-
-            // Compute Difference/Progress String
-            let diffStr = "";
-            let progressPercent = 0;
-            if (goal && current) {
-              if (isLoss) {
-                const diff = current - goal;
-                diffStr = diff <= 0 ? "Goal Met! 🎉" : `${diff.toFixed(1)} ${cfg.unit} remaining`;
-                // progress calculation for loss: starting from highest or a reasonable offset
-                const baseVal = highest && highest > goal ? highest : current + 5;
-                const totalRange = baseVal - goal;
-                const currentProgress = baseVal - current;
-                progressPercent = totalRange > 0 ? Math.min(100, Math.max(0, (currentProgress / totalRange) * 100)) : 100;
-              } else {
-                const diff = goal - current;
-                diffStr = diff <= 0 ? "Goal Met! 🎉" : `${diff.toFixed(1)} ${cfg.unit} remaining`;
-                progressPercent = Math.min(100, Math.max(0, (current / goal) * 100));
-              }
-            }
-
+            const { current, best, goal } = getStats(cfg.key, cfg);
             return (
-              <Card key={cfg.key} className="p-0 overflow-hidden border border-border">
-                <div
-                  onClick={() => {
-                    setExpandedKey(isExpanded ? null : cfg.key);
-                    setLogValue("");
-                    setGoalValue("");
-                    setStatusMsg(null);
-                  }}
-                  className="flex justify-between items-center p-4 bg-surface1 hover:bg-surface2/60 cursor-pointer transition-colors"
-                >
-                  <div className="flex-1 pr-4">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-lg">{cfg.emoji}</span>
-                      <span className="text-sm font-bold text-white">{cfg.label}</span>
-                    </div>
-
-                    {goal ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] text-secondary font-semibold">
-                          {isLoss ? (
-                            <>Target: {goal} {cfg.unit} • Progress: {current ? `${current} → ${goal}` : "No Logs"}</>
-                          ) : (
-                            <>Target: {goal} {cfg.unit} • Progress: {current ? `${current} / ${goal}` : "No Logs"}</>
-                          )}
-                        </span>
-                        {/* Progress Bar */}
-                        <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-1">
-                          <div
-                            className="bg-accent h-full rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] text-secondary font-semibold italic">No target set</span>
-                    )}
+              <Card key={cfg.key} className="p-4 border border-border bg-surface1">
+                <div className="flex items-center gap-2 mb-2 border-b border-border/10 pb-1.5">
+                  <span className="text-lg">{cfg.emoji}</span>
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">{cfg.label}</span>
+                </div>
+                <div className="flex flex-col gap-1 text-[11px] text-secondary">
+                  <div className="flex justify-between">
+                    <span>Current:</span>
+                    <span className="font-semibold text-white">{current ? `${current} ${cfg.unit}` : "—"}</span>
                   </div>
-
-                  <div className="text-right flex flex-col items-end justify-center">
-                    <span className="text-base font-extrabold text-white leading-none">
-                      {current ? `${current} ${cfg.unit}` : "—"}
-                    </span>
-                    <span className="text-[9px] text-secondary mt-1 block">
-                      Best: {best ? `${best} ${cfg.unit}` : "—"}
-                    </span>
+                  <div className="flex justify-between">
+                    <span>Goal:</span>
+                    <span className="font-semibold text-accent">{goal ? `${goal} ${cfg.unit}` : "—"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Best:</span>
+                    <span className="font-semibold text-white">{best ? `${best} ${cfg.unit}` : "—"}</span>
                   </div>
                 </div>
-
-                {isExpanded && (
-                  <div className="p-4 pt-3 bg-surface1 border-t border-border/20 flex flex-col gap-4">
-                    {/* Stats details grid */}
-                    <div className="grid grid-cols-3 gap-2 text-center bg-surface2/40 border border-border/30 rounded-xl p-3">
-                      <div>
-                        <span className="text-[9px] text-secondary uppercase block mb-0.5">Highest</span>
-                        <span className="text-xs font-bold text-white">{highest ? `${highest} ${cfg.unit}` : "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-secondary uppercase block mb-0.5">Lowest</span>
-                        <span className="text-xs font-bold text-white">{lowest ? `${lowest} ${cfg.unit}` : "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-secondary uppercase block mb-0.5">Difference</span>
-                        <span className="text-xs font-bold text-accent">{diffStr || "No goal"}</span>
-                      </div>
-                    </div>
-
-                    {/* Inline Log / Set Target Forms */}
-                    <div className="grid grid-cols-2 gap-3.5 mt-1">
-                      <div>
-                        <label className="text-[10px] text-secondary uppercase block mb-1">Log Today</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder={current ? `e.g. ${current}` : `e.g. 70`}
-                          value={logValue}
-                          onChange={(e) => setLogValue(e.target.value)}
-                          className="w-full bg-[#111111] py-2 px-2.5 border border-[#2A2A2A] rounded-xl text-xs text-white focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-secondary uppercase block mb-1">Set Goal</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder={goal ? `e.g. ${goal}` : `e.g. 75`}
-                          value={goalValue}
-                          onChange={(e) => setGoalValue(e.target.value)}
-                          className="w-full bg-[#111111] py-2 px-2.5 border border-[#2A2A2A] rounded-xl text-xs text-white focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {statusMsg && statusMsg.key === cfg.key && (
-                      <p className={`text-[10px] font-bold ${statusMsg.type === "success" ? "text-success" : "text-danger"}`}>
-                        {statusMsg.text}
-                      </p>
-                    )}
-
-                    <button
-                      onClick={() => handleSaveConfig(cfg.key)}
-                      disabled={submitting}
-                      className="btn btn-primary text-xs font-bold py-2 w-full"
-                    >
-                      {submitting ? "Saving..." : "Save Spec"}
-                    </button>
-                  </div>
-                )}
               </Card>
             );
           })}
         </div>
 
-        {/* Historical Logs List */}
-        <div className="flex flex-col gap-3">
-          <p className="text-[10px] font-bold text-secondary uppercase tracking-wider">Historical Logs</p>
-          {records.length === 0 ? (
-            <Card className="text-center py-6 text-xs text-secondary italic border border-border">
-              No measurements recorded yet
-            </Card>
-          ) : (
-            records.slice(0, 8).map((r) => (
-              <Card key={r.id} className="border border-border/40">
-                <div className="flex justify-between items-center mb-2 border-b border-border/10 pb-1.5">
-                  <span className="text-white font-bold text-xs">{r.date}</span>
-                  {r.weight_kg && <span className="text-xs text-accent font-extrabold">{r.weight_kg} kg</span>}
-                </div>
-                <div className="grid grid-cols-3 gap-y-1.5 gap-x-2 mt-2">
-                  {r.wrist_cm && <div className="text-[10px] text-secondary">Wrist: <span className="text-white font-medium">{r.wrist_cm}cm</span></div>}
-                  {r.waist_cm && <div className="text-[10px] text-secondary">Waist: <span className="text-white font-medium">{r.waist_cm}cm</span></div>}
-                  {r.arm_cm && <div className="text-[10px] text-secondary">Arm: <span className="text-white font-medium">{r.arm_cm}cm</span></div>}
-                  {r.forearm_cm && <div className="text-[10px] text-secondary">Forearm: <span className="text-white font-medium">{r.forearm_cm}cm</span></div>}
-                  {r.chest_cm && <div className="text-[10px] text-secondary">Chest: <span className="text-white font-medium">{r.chest_cm}cm</span></div>}
-                  {r.hip_cm && <div className="text-[10px] text-secondary">Hip: <span className="text-white font-medium">{r.hip_cm}cm</span></div>}
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
+        {/* EDIT DIALOG (MODAL) */}
+        {isEditOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000]/80 animate-fade-in">
+            <div className="w-full max-w-sm bg-surface1 border border-border rounded-2xl overflow-hidden shadow-2xl animate-slide-up max-h-[85vh] flex flex-col">
+              
+              <div className="p-4 border-b border-border flex justify-between items-center">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Edit Specs & Goals</span>
+                <button onClick={() => setIsEditOpen(false)} className="text-secondary hover:text-white">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveAll} className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+                {MEASUREMENT_CONFIGS.map(cfg => (
+                  <div key={cfg.key} className="bg-surface2/40 border border-border/30 rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span>{cfg.emoji}</span>
+                      <span className="text-xs font-bold text-white">{cfg.label} ({cfg.unit})</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] text-secondary uppercase block mb-1">Today's Value</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="e.g. 70"
+                          value={formCurrents[cfg.key] || ""}
+                          onChange={(e) => setFormCurrents({ ...formCurrents, [cfg.key]: e.target.value })}
+                          className="w-full bg-[#111111] py-1.5 px-2 border border-[#2A2A2A] rounded-lg text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] text-secondary uppercase block mb-1">Target Goal</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="e.g. 75"
+                          value={formGoals[cfg.key] || ""}
+                          onChange={(e) => setFormGoals({ ...formGoals, [cfg.key]: e.target.value })}
+                          className="w-full bg-[#111111] py-1.5 px-2 border border-[#2A2A2A] rounded-lg text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary text-xs font-bold py-2.5 w-full mt-2"
+                >
+                  {submitting ? "Saving..." : "Save Specs & Goals"}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
       <NavBar />
     </div>
