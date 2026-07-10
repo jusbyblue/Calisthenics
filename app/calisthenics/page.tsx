@@ -27,7 +27,7 @@ interface PrereqRule {
 }
 
 // Unified exercise catalog with unlock requirements and mastery targets
-interface CatalogItem {
+export interface CatalogItem {
   name: string;
   path: "legs" | "push" | "pull" | "core" | "skills" | "elite";
   unlock_req?: string;
@@ -36,7 +36,7 @@ interface CatalogItem {
   prerequisites?: string[] | PrereqRule;
 }
 
-const GUILD_CATALOG: CatalogItem[] = [
+export const GUILD_CATALOG: CatalogItem[] = [
   // Legs (33 items)
   { name: "Air Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: [] },
   { name: "Box Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Air Squat"] },

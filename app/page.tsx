@@ -6,12 +6,23 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardInner, CardLabel } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { NavBar } from "@/components/ui/NavBar";
+import { GUILD_CATALOG, CatalogItem } from "./calisthenics/page";
 
 interface CalisthenicsProgress {
   exercise_name: string;
   path: string;
   mastery_percent: number;
   learned: boolean;
+  target_reps?: number;
+}
+
+interface PrLogItem {
+  id: string;
+  exercise: string;
+  value: number;
+  unit: string;
+  date: string;
+  notes?: string;
 }
 
 const EXERCISE_ORDER: Record<string, string[]> = {
@@ -125,6 +136,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [skills, setSkills] = useState<CalisthenicsProgress[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
+  const [prLogs, setPrLogs] = useState<PrLogItem[]>([]);
 
   const loadData = async (profileId: string) => {
     try {
@@ -137,6 +149,7 @@ export default function Dashboard() {
           .from("pr_logs")
           .select("*")
           .eq("profile_id", profileId)
+          .order("date", { ascending: false })
       ]);
 
       if (progressRes.data) {
@@ -144,12 +157,21 @@ export default function Dashboard() {
           exercise_name: s.exercise_name,
           path: s.path,
           mastery_percent: s.mastery_percent || 0,
-          learned: s.learned || false
+          learned: s.learned || false,
+          target_reps: s.target_reps || 10
         })));
       }
 
       if (prRes.data) {
         setTotalSessions(prRes.data.length);
+        setPrLogs(prRes.data.map(log => ({
+          id: log.id,
+          exercise: log.exercise,
+          value: log.value,
+          unit: log.unit || "reps",
+          date: log.date,
+          notes: log.notes
+        })));
       }
     } catch (err) {
       console.error("Error loading Dashboard data:", err);
@@ -241,10 +263,10 @@ export default function Dashboard() {
   // Weakest Path Calculation
   const weakestPathInfo = useMemo(() => {
     const paths = [
-      { name: "Leg Mastery", path: "legs", avg: legsAvg, recommend: "Train Legs & Single Leg Balance 2x this week" },
-      { name: "Push Mastery", path: "push", avg: pushAvg, recommend: "Train Chest Press & Shoulder Dips 2x this week" },
-      { name: "Pull Mastery", path: "pull", avg: pullAvg, recommend: "Train Pull-ups & Horizontal Rows 2x this week" },
-      { name: "Core Mastery", path: "core", avg: coreAvg, recommend: "Train Hanging L-Sit & Core Twists 2x this week" }
+      { name: "Leg Mastery", path: "legs", avg: legsAvg, recommend: "Train Legs & Single Leg Balance" },
+      { name: "Push Mastery", path: "push", avg: pushAvg, recommend: "Train Chest Press & Shoulder Dips" },
+      { name: "Pull Mastery", path: "pull", avg: pullAvg, recommend: "Train Pull-ups & Horizontal Rows" },
+      { name: "Core Mastery", path: "core", avg: coreAvg, recommend: "Train Hanging Leg Raises & L-Sit" }
     ];
     paths.sort((a, b) => a.avg - b.avg);
     return paths[0];
@@ -253,61 +275,172 @@ export default function Dashboard() {
   // Current Focus Calculation (First unlocked, unmastered skill in the weakest book path)
   const currentFocus = useMemo(() => {
     const weakestBook = weakestPathInfo.path;
-    const orderList = EXERCISE_ORDER[weakestBook] || [];
+    const orderList = GUILD_CATALOG.filter(x => x.path === weakestBook);
+
+    const isExerciseUnlockedLocal = (exName: string) => {
+      if (exName.includes("MASTER")) return false; // Skip checking master nodes as target
+      const item = GUILD_CATALOG.find(x => x.name === exName);
+      if (!item) return false;
+      const prereqs = item.prerequisites;
+      if (!prereqs || (Array.isArray(prereqs) && prereqs.length === 0)) return true;
+      const isExerciseMasteredLocal = (name: string) => {
+        const s = skills.find(sk => sk.exercise_name === name);
+        return s ? s.mastery_percent >= 100 : false;
+      };
+      if (Array.isArray(prereqs)) {
+        return prereqs.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "and") {
+        return prereqs.exercises.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "or") {
+        return prereqs.exercises.some(isExerciseMasteredLocal);
+      }
+      return false;
+    };
 
     for (let i = 0; i < orderList.length; i++) {
-      const exName = orderList[i];
-      const match = skills.find(s => s.exercise_name === exName);
+      const ex = orderList[i];
+      const match = skills.find(s => s.exercise_name === ex.name);
       const mastery = match ? match.mastery_percent : 0;
 
-      if (mastery < 100) {
-        const nextExercise = orderList[i + 1] || "Path Mastered!";
+      if (mastery < 100 && isExerciseUnlockedLocal(ex.name)) {
         return {
           bookName: weakestPathInfo.name,
-          exercise: exName,
+          exercise: ex.name,
           mastery,
-          nextUnlock: nextExercise
+          masteryReqText: ex.mastery_req
         };
       }
     }
 
     return {
       bookName: weakestPathInfo.name,
-      exercise: orderList[orderList.length - 1] || "All Completed",
+      exercise: "Path Mastered!",
       mastery: 100,
-      nextUnlock: "Path fully mastered!"
+      masteryReqText: "N/A"
     };
   }, [weakestPathInfo, skills]);
+
+  // Dynamic Recommendations based on unlocked, unmastered exercises
+  const recommendedToday = useMemo(() => {
+    const list: CatalogItem[] = [];
+    const isExerciseUnlockedLocal = (exName: string) => {
+      const item = GUILD_CATALOG.find(x => x.name === exName);
+      if (!item) return false;
+      const prereqs = item.prerequisites;
+      if (!prereqs || (Array.isArray(prereqs) && prereqs.length === 0)) return true;
+      const isExerciseMasteredLocal = (name: string) => {
+        const s = skills.find(sk => sk.exercise_name === name);
+        return s ? s.mastery_percent >= 100 : false;
+      };
+      if (Array.isArray(prereqs)) {
+        return prereqs.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "and") {
+        return prereqs.exercises.every(isExerciseMasteredLocal);
+      }
+      if (prereqs.type === "or") {
+        return prereqs.exercises.some(isExerciseMasteredLocal);
+      }
+      return false;
+    };
+
+    for (const item of GUILD_CATALOG) {
+      if (item.name.includes("MASTER")) continue;
+      const progress = skills.find(s => s.exercise_name === item.name);
+      const mastery = progress ? progress.mastery_percent : 0;
+      if (mastery < 100 && isExerciseUnlockedLocal(item.name)) {
+        list.push(item);
+        if (list.length >= 3) break;
+      }
+    }
+
+    if (list.length < 3) {
+      const defaults = GUILD_CATALOG.filter(x => !x.name.includes("MASTER") && !list.some(y => y.name === x.name));
+      for (const d of defaults) {
+        list.push(d);
+        if (list.length >= 3) break;
+      }
+    }
+    return list;
+  }, [skills]);
+
+  // Master Titles
+  const masterTitles = useMemo(() => {
+    const list: string[] = [];
+    if (legsAvg >= 100) list.push("Leg Master");
+    if (pushAvg >= 100) list.push("Push Master");
+    if (pullAvg >= 100) list.push("Pull Master");
+    if (coreAvg >= 100) list.push("Core Master");
+    if (!skillsLocked && skillsAvg >= 100) list.push("Skills Master");
+    if (!eliteLocked && eliteAvg >= 100) list.push("Elite Master");
+    return list;
+  }, [legsAvg, pushAvg, pullAvg, coreAvg, skillsAvg, eliteAvg, skillsLocked, eliteLocked]);
+
+  // Athlete Grade
+  const athleteGrade = useMemo(() => {
+    if (athleteScore < 100) return "Novice";
+    if (athleteScore < 300) return "Challenger";
+    if (athleteScore < 600) return "Specialist";
+    if (athleteScore < 900) return "Elite";
+    return "Master";
+  }, [athleteScore]);
+
+  // Today's Progress / Daily progress
+  const todayProgress = useMemo(() => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const todayLogs = prLogs.filter(log => log.date === todayStr);
+    const todayXp = todayLogs.reduce((sum, log) => {
+      const catalogItem = GUILD_CATALOG.find(x => x.name === log.exercise);
+      let difficulty = 3;
+      if (catalogItem) {
+        if (log.exercise.includes("Air Squat") || log.exercise.includes("Wall Push-up")) difficulty = 1;
+        else if (log.exercise.includes("Pistol Squat") || log.exercise.includes("Handstand Push-up")) difficulty = 8;
+        else if (log.exercise.includes("Full Planche") || log.exercise.includes("LEG MASTER")) difficulty = 10;
+      }
+      return sum + getXpForDifficulty(difficulty);
+    }, 0);
+    return {
+      exercisesLogged: todayLogs.length,
+      xpEarned: todayXp
+    };
+  }, [prLogs]);
+
+  // Latest Unlock / Learned skill calculation
+  const latestUnlock = useMemo(() => {
+    const learnedSkills = skills.filter(s => s.learned);
+    if (learnedSkills.length === 0) {
+      return { name: "Guild Journey Initiated", date: "Just now" };
+    }
+    for (const log of prLogs) {
+      const matchedSkill = skills.find(s => s.exercise_name === log.exercise);
+      if (matchedSkill && matchedSkill.learned) {
+        return { name: matchedSkill.exercise_name, date: log.date };
+      }
+    }
+    return { name: learnedSkills[0].exercise_name, date: "Recently" };
+  }, [skills, prLogs]);
 
   // Dynamic Achievements list
   const recentAchievements = useMemo(() => {
     const list: string[] = [];
-
-    // Achievement: First Pull-up
     const hasPullup = skills.some(s => s.exercise_name === "Standard Pull-up" && s.learned);
-    if (hasPullup) {
-      list.push("🏆 First Pull-Up");
-    }
-
-    // Achievement: XP Reached
+    if (hasPullup) list.push("🏆 First Pull-Up");
     if (totalCalisthenicsXp >= 1000) {
       list.push("🏆 1000 XP Reached");
     } else if (totalCalisthenicsXp >= 500) {
       list.push("🏆 500 XP Reached");
     }
-
-    // Book Apprentice achievements
     if (legsAvg >= 25) list.push("🏆 Leg Master Apprentice");
     if (pushAvg >= 25) list.push("🏆 Push Master Apprentice");
     if (pullAvg >= 25) list.push("🏆 Pull Master Apprentice");
     if (coreAvg >= 25) list.push("🏆 Core Master Apprentice");
 
-    // Fallbacks if nothing is unlocked yet
     if (list.length === 0) {
       list.push("🏆 Guild Journey Initiated");
       list.push("🏆 Recruit Rank Attained");
     }
-
     return list.slice(0, 3);
   }, [skills, totalCalisthenicsXp, legsAvg, pushAvg, pullAvg, coreAvg]);
 
@@ -359,9 +492,17 @@ export default function Dashboard() {
       <div className="page-content pb-24">
         
         {/* Header - Who Am I? */}
-        <div className="pt-2">
-          <p className="label">Dashboard</p>
-          <h1 className="text-2xl font-bold text-primary">Calisthenics Guild</h1>
+        <div className="pt-2 flex justify-between items-center">
+          <div>
+            <p className="label">Dashboard</p>
+            <h1 className="text-2xl font-bold text-primary">Calisthenics Guild</h1>
+          </div>
+          <button
+            onClick={() => router.push("/calisthenics")}
+            className="px-4 py-2 bg-accent hover:bg-accent/80 text-white rounded-xl text-xs font-bold transition-all shadow-[0_0_10px_rgba(74,158,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          >
+            Train Now ⚡
+          </button>
         </div>
 
         {/* Identity & Level */}
@@ -386,19 +527,54 @@ export default function Dashboard() {
           </div>
         </Card>
 
+        {/* Quick Actions Row */}
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            onClick={() => router.push("/calisthenics")}
+            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+          >
+            <span className="text-lg">📚</span>
+            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Book Trees</span>
+          </button>
+          <button
+            onClick={() => router.push("/weight")}
+            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+          >
+            <span className="text-lg">⚖️</span>
+            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Log Weight</span>
+          </button>
+          <button
+            onClick={() => router.push("/pr")}
+            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+          >
+            <span className="text-lg">🏆</span>
+            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Log PR</span>
+          </button>
+          <button
+            onClick={() => router.push("/measurements")}
+            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+          >
+            <span className="text-lg">📏</span>
+            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Measures</span>
+          </button>
+        </div>
+
         {/* Overall Completion Progress */}
         <Card className="bg-[#121221]/90">
           <CardLabel>Overall Completion</CardLabel>
           <div className="flex items-center gap-6 mt-2">
-            <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="32" cy="32" r="28" className="stroke-[#19192C]" strokeWidth="5.5" fill="transparent" />
-                <circle cx="32" cy="32" r="28" className="stroke-accent" strokeWidth="5.5" fill="transparent"
-                  strokeDasharray={175.9}
-                  strokeDashoffset={175.9 - (175.9 * overallAverage) / 100}
-                />
-              </svg>
-              <span className="absolute text-sm font-black text-white">{overallAverage}%</span>
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="32" cy="32" r="28" className="stroke-[#19192C]" strokeWidth="5.5" fill="transparent" />
+                  <circle cx="32" cy="32" r="28" className="stroke-accent" strokeWidth="5.5" fill="transparent"
+                    strokeDasharray={175.9}
+                    strokeDashoffset={175.9 - (175.9 * overallAverage) / 100}
+                  />
+                </svg>
+                <span className="absolute text-sm font-black text-white">{overallAverage}%</span>
+              </div>
+              <span className="text-[8px] text-secondary font-bold uppercase tracking-wider mt-1">{masteredCount} / {totalExercises} Mastered</span>
             </div>
             <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
               <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
@@ -418,7 +594,7 @@ export default function Dashboard() {
           <CardLabel>Mastery Paths</CardLabel>
           
           {/* Legs */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📕</span> Leg Mastery
             </span>
@@ -426,7 +602,7 @@ export default function Dashboard() {
           </div>
 
           {/* Push */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📘</span> Push Mastery
             </span>
@@ -434,7 +610,7 @@ export default function Dashboard() {
           </div>
 
           {/* Pull */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📙</span> Pull Mastery
             </span>
@@ -442,7 +618,7 @@ export default function Dashboard() {
           </div>
 
           {/* Core */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📗</span> Core Mastery
             </span>
@@ -450,7 +626,7 @@ export default function Dashboard() {
           </div>
 
           {/* Skills */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📕</span> Skills & Balance
             </span>
@@ -460,7 +636,7 @@ export default function Dashboard() {
           </div>
 
           {/* Elite */}
-          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+          <div className="flex justify-between items-center bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
             <span className="text-white text-xs font-semibold flex items-center gap-2">
               <span>📘</span> Elite Skills
             </span>
@@ -470,10 +646,10 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* What Should I Do Next? - Current Focus Card */}
+        {/* What Should I Do Next? - Today's Target Card */}
         <Card className="border border-accent/20 bg-accent/5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-accent tracking-wider uppercase">Current Focus</span>
+            <span className="text-xs font-bold text-accent tracking-wider uppercase">Today's Target</span>
             <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
           </div>
           <div className="mt-3 flex flex-col gap-2">
@@ -485,6 +661,10 @@ export default function Dashboard() {
               <span className="text-[10px] text-secondary uppercase block">Exercise Target</span>
               <span className="text-white font-black text-sm block mt-0.5">{currentFocus.exercise}</span>
             </div>
+            <div>
+              <span className="text-[10px] text-secondary uppercase block">Required Goal</span>
+              <span className="text-white font-bold text-xs block mt-0.5">{currentFocus.masteryReqText}</span>
+            </div>
             <div className="flex gap-4 items-center mt-1">
               <div className="flex-1">
                 <span className="text-[10px] text-secondary uppercase block mb-1">Mastery Progress</span>
@@ -492,9 +672,68 @@ export default function Dashboard() {
               </div>
               <span className="text-xs font-bold text-white bg-surface2 px-2.5 py-1 rounded-lg border border-border/20">{currentFocus.mastery}%</span>
             </div>
-            <div className="border-t border-border/15 pt-2 mt-1">
-              <span className="text-[9px] text-secondary uppercase block">Next Unlock Target</span>
-              <span className="text-accent font-semibold text-xs mt-0.5 block">{currentFocus.nextUnlock}</span>
+          </div>
+        </Card>
+
+        {/* Daily Target Progress */}
+        <Card className="bg-[#121221]/90">
+          <CardLabel>Today's Progress</CardLabel>
+          <div className="flex flex-col gap-2 mt-1.5">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-secondary">Exercises Logged Today</span>
+              <span className="text-white font-extrabold">{todayProgress.exercisesLogged}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-secondary">XP Earned Today</span>
+              <span className="text-accent font-black">+{todayProgress.xpEarned} XP</span>
+            </div>
+            <ProgressBar value={Math.min(100, (todayProgress.exercisesLogged / 3) * 100)} color="var(--accent)" height={5} />
+            <span className="text-[8.5px] text-secondary/70 italic mt-0.5 block">Aim for at least 3 logged exercises per day!</span>
+          </div>
+        </Card>
+
+        {/* Recent Activity Logs */}
+        <Card>
+          <CardLabel>Recent Activity</CardLabel>
+          <div className="flex flex-col gap-2.5 mt-2">
+            {prLogs.length === 0 ? (
+              <span className="text-xs text-secondary/50 italic py-2 block text-center">No logged training sessions yet.</span>
+            ) : (
+              prLogs.slice(0, 3).map((log, i) => (
+                <div key={log.id || i} className="flex justify-between items-center bg-[#13131F] p-2.5 rounded-xl border border-border/10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">⚡</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{log.exercise}</h4>
+                      <p className="text-[9px] text-secondary/60 mt-0.5">{log.date}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-black text-accent">{log.value} {log.unit}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        {/* Achievements / Latest Unlock */}
+        <Card className="border border-success/20 bg-success/5">
+          <CardLabel className="text-success">Recent Achievement / Latest Unlock</CardLabel>
+          <div className="mt-2.5 flex flex-col gap-2">
+            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-success/10 border border-success/15">
+              <span className="text-lg">🎉</span>
+              <div>
+                <span className="text-[8px] text-secondary uppercase font-bold tracking-wider">Latest Activity Unlock</span>
+                <h4 className="text-xs font-black text-white mt-0.5">{latestUnlock.name}</h4>
+                <p className="text-[9px] text-secondary/60 mt-0.5">{latestUnlock.date}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1 mt-1 text-xs">
+              <span className="text-[9px] text-secondary uppercase font-bold mb-0.5 block">Recent Milestone Accomplished</span>
+              {recentAchievements.slice(0, 2).map((ach, i) => (
+                <span key={i} className="text-white font-medium flex items-center gap-1.5">
+                  <span className="text-[10px]">⭐</span> {ach}
+                </span>
+              ))}
             </div>
           </div>
         </Card>
@@ -525,23 +764,35 @@ export default function Dashboard() {
             </div>
             <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
               <span className="text-secondary text-[10px] block uppercase font-medium">Athlete Score</span>
-              <span className="text-lg font-black text-accent mt-1 block">{athleteScore}</span>
+              <span className="text-lg font-black text-accent mt-1 block">{athleteScore} <span className="text-secondary text-[10px] font-normal">{athleteGrade}</span></span>
+            </div>
+            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10 col-span-2">
+              <span className="text-secondary text-[10px] block uppercase font-medium">Master Titles Earned ({masterTitles.length})</span>
+              <span className="text-xs font-black text-white mt-1 block">
+                {masterTitles.length > 0 ? masterTitles.join(" • ") : "None yet"}
+              </span>
             </div>
           </div>
         </Card>
 
-
-        {/* Weakest Path */}
+        {/* Weakest Path & Recommendation */}
         <Card className="border border-[#FF4A4A]/25 bg-[#FF4A4A]/5">
-          <CardLabel className="text-[#FF4A4A]">Weakest Path</CardLabel>
+          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Today</CardLabel>
           <div className="mt-2 flex flex-col gap-1.5">
             <div className="flex justify-between items-center">
               <span className="text-white font-bold text-sm">{weakestPathInfo.name}</span>
               <span className="text-xs font-bold text-[#FF4A4A] bg-[#FF4A4A]/10 px-2.5 py-0.5 rounded-lg border border-[#FF4A4A]/20">{weakestPathInfo.avg}%</span>
             </div>
-            <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1">
-              <span className="text-[9px] text-secondary uppercase block">Recommendation</span>
-              <span className="text-white text-xs font-semibold mt-0.5 block">{weakestPathInfo.recommend}</span>
+            <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1.5 flex flex-col gap-1">
+              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended From Unlocked Progress Tree</span>
+              {recommendedToday.map((rec, i) => (
+                <div key={rec.name || i} className="flex justify-between items-center text-xs py-0.5">
+                  <span className="text-white font-semibold flex items-center gap-1.5">
+                    <span className="text-[9px] text-accent">●</span> {rec.name}
+                  </span>
+                  <span className="text-secondary/70 font-mono text-[10px]">{rec.mastery_req}</span>
+                </div>
+              ))}
             </div>
           </div>
         </Card>
@@ -560,7 +811,7 @@ export default function Dashboard() {
                   <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Strength</th>
                   <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Power</th>
                   <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Explosive</th>
-                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Master</th>
+                  <th className="p-2.5 font-bold text-secondary text-[10px] uppercase">Mastery</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/10">
@@ -585,37 +836,37 @@ export default function Dashboard() {
           <div className="flex flex-col gap-2.5 mt-2">
             
             {/* Legs */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Leg Master</span>
               {renderTechStatus("legs", legsAvg, false)}
             </div>
 
             {/* Push */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Push Master</span>
               {renderTechStatus("push", pushAvg, false)}
             </div>
 
             {/* Pull */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Pull Master</span>
               {renderTechStatus("pull", pullAvg, false)}
             </div>
 
             {/* Core */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Core Master</span>
               {renderTechStatus("core", coreAvg, false)}
             </div>
 
             {/* Skills */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Skills Master</span>
               {renderTechStatus("skills", skillsAvg, skillsLocked)}
             </div>
 
             {/* Elite */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl">
+            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics")}>
               <span className="text-secondary font-semibold">Elite Master</span>
               {renderTechStatus("elite", eliteAvg, eliteLocked)}
             </div>
