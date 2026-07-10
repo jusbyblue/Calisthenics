@@ -294,6 +294,19 @@ export default function PRPage() {
     return "N/A";
   };
 
+  const renderTargetProgress = (msRecord: any, bestLog: any, unitVal: string) => {
+    if (!msRecord) return null;
+    const targetVal = msRecord.value;
+    const isCompleted = msRecord.completed || (bestLog && bestLog.value >= targetVal);
+    const currentVal = bestLog ? bestLog.value : 0;
+    
+    return (
+      <span className={`text-[9.5px] mt-1 font-bold block ${isCompleted ? "text-success" : "text-warning"}`}>
+        Target: {targetVal} {unitVal} {isCompleted ? "• Completed: Yes 🎉" : `• Progress: ${currentVal} / ${targetVal}`}
+      </span>
+    );
+  };
+
   // Compute Current PR for selected exercise
   const currentPrValue = useMemo(() => {
     if (!formExercise) return "None logged";
@@ -303,12 +316,14 @@ export default function PRPage() {
     return `${best} ${matched[0].unit}`;
   }, [formExercise, prRecords]);
 
-  // Compute Current Milestone for selected exercise
-  const currentMilestoneValue = useMemo(() => {
-    if (!formExercise) return "None set";
+  // Compute Current Target for selected exercise
+  const currentTargetValue = useMemo(() => {
+    if (!formExercise) return "None";
     const match = milestones.find(m => m.exercise === formExercise);
-    return match ? `${match.value} (Completed: ${match.completed ? "Yes" : "No"})` : "None set";
-  }, [formExercise, milestones]);
+    const cat = CATEGORIES[formCategory];
+    const unit = prRecords.find(r => r.exercise === formExercise)?.unit || cat?.defaultUnit || "reps";
+    return match ? `${match.value} ${unit}` : "None";
+  }, [formExercise, milestones, formCategory, prRecords]);
 
   const handleSavePr = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,7 +451,6 @@ export default function PRPage() {
                     <span className="text-xl">{catData.emoji}</span>
                     <div>
                       <span className="font-bold text-white text-base">{catName}</span>
-                      <p className="text-[10px] text-secondary mt-0.5">{loggedPrCount} / {catExercises.length} records</p>
                     </div>
                   </div>
                   <svg
@@ -477,11 +491,7 @@ export default function PRPage() {
                                       )}
                                     </div>
                                   )}
-                                  {msRecord && (
-                                    <span className={`text-[9px] mt-1 font-bold block ${msRecord.completed ? "text-success" : "text-warning"}`}>
-                                      Milestone: {msRecord.value} {unitVal} ({msRecord.completed ? "Done" : "In Progress"})
-                                    </span>
-                                  )}
+                                  {renderTargetProgress(msRecord, bestLog, unitVal)}
                                 </div>
                                 <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
                                   {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
@@ -516,11 +526,7 @@ export default function PRPage() {
                                     )}
                                   </div>
                                 )}
-                                {msRecord && (
-                                  <span className={`text-[9px] mt-1 font-bold block ${msRecord.completed ? "text-success" : "text-warning"}`}>
-                                    Milestone: {msRecord.value} {unitVal} ({msRecord.completed ? "Done" : "In Progress"})
-                                  </span>
-                                )}
+                                {renderTargetProgress(msRecord, bestLog, unitVal)}
                               </div>
                               <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
                                 {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
@@ -559,7 +565,7 @@ export default function PRPage() {
                     editTab === "milestone" ? "bg-accent/10 text-accent border-b-2 border-accent" : "text-secondary hover:text-white"
                   }`}
                 >
-                  New Milestone
+                  New Target
                 </button>
               </div>
 
@@ -567,7 +573,7 @@ export default function PRPage() {
               <div className="p-5">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xs font-bold text-secondary uppercase">
-                    {editTab === "pr" ? "Add Personal Record" : "Add Target Milestone"}
+                    {editTab === "pr" ? "Add Personal Record" : "Add Target Goal"}
                   </span>
                   <button onClick={() => setIsEditOpen(false)} className="text-secondary hover:text-white">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -661,14 +667,14 @@ export default function PRPage() {
                     </>
                   ) : (
                     <>
-                      {/* Milestone Form Side-by-Side: Current Milestone on Left, Enter New Milestone on Right */}
+                      {/* Milestone Form Side-by-Side: Current Target on Left, Enter New Target on Right */}
                       <div className="grid grid-cols-2 gap-4 items-center bg-surface2/60 border border-border/40 p-3.5 rounded-xl">
                         <div>
-                          <span className="text-secondary text-[10px] uppercase block">Current Milestone</span>
-                          <span className="text-white text-sm font-bold mt-1 block">{currentMilestoneValue.split(" (")[0]}</span>
+                          <span className="text-secondary text-[10px] uppercase block">Current Target</span>
+                          <span className="text-white text-sm font-bold mt-1 block">{currentTargetValue}</span>
                         </div>
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Enter New Milestone</label>
+                          <label className="text-[10px] text-secondary uppercase block mb-1">New Target</label>
                           <input
                             type="number"
                             step="0.1"
@@ -681,17 +687,45 @@ export default function PRPage() {
                         </div>
                       </div>
 
+                      {/* Unit & Notes */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] text-secondary uppercase block mb-1">Unit</label>
+                          <select
+                            value={formUnit}
+                            onChange={(e) => setFormUnit(e.target.value)}
+                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                          >
+                            <option value="reps">reps</option>
+                            <option value="kg">kg</option>
+                            <option value="sec">sec</option>
+                            <option value="min">min</option>
+                            <option value="km">km</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-secondary uppercase block mb-1">Notes</label>
+                          <input
+                            type="text"
+                            placeholder="Optional notes"
+                            value={formNotes}
+                            onChange={(e) => setFormNotes(e.target.value)}
+                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
                       {/* Milestone Completed Box Underneath */}
                       <div className="flex items-center gap-2.5 bg-surface2/40 p-3 border border-border/40 rounded-xl">
                         <input
-                          type="checkbox"
-                          id="milestoneCompleted"
-                          checked={formCompleted}
-                          onChange={(e) => setFormCompleted(e.target.checked)}
-                          className="w-4.5 h-4.5 rounded border-border bg-surface2 text-accent focus:ring-0"
+                           type="checkbox"
+                           id="milestoneCompleted"
+                           checked={formCompleted}
+                           onChange={(e) => setFormCompleted(e.target.checked)}
+                           className="w-4.5 h-4.5 rounded border-border bg-surface2 text-accent focus:ring-0 cursor-pointer"
                         />
                         <label htmlFor="milestoneCompleted" className="text-xs font-semibold text-white cursor-pointer select-none">
-                          Milestone Completed
+                          Completed
                         </label>
                       </div>
                     </>
@@ -702,7 +736,7 @@ export default function PRPage() {
                     disabled={isSubmitting}
                     className="btn btn-primary text-xs font-bold py-2.5 w-full mt-2"
                   >
-                    {isSubmitting ? "Saving..." : "Save Entry"}
+                    {isSubmitting ? "Saving..." : (editTab === "pr" ? "Save PR" : "Save Target")}
                   </button>
                 </form>
               </div>
