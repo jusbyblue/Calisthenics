@@ -17,52 +17,54 @@ interface SkillItem {
   reps: number;
   target_reps: number;
   sessions_hit: number;
+  x3_completed?: boolean;
 }
 
 // Unified exercise catalog with unlock requirements and mastery targets
 interface CatalogItem {
   name: string;
   path: "legs" | "push" | "pull" | "core" | "skills" | "elite";
-  unlock_req: string;
+  unlock_req?: string;
   mastery_req: string;
   target_reps: number;
+  prerequisites?: string[];
 }
 
 const GUILD_CATALOG: CatalogItem[] = [
   // Legs (33 items)
-  { name: "Air Squat", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Box Squat", path: "legs", unlock_req: "3 × 12", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Tempo Squat (3 sec down)", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Pause Squat (2 sec bottom)", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Narrow Squat", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Standard Squat", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Wide Squat", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Sumo Squat", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 25", target_reps: 25 },
-  { name: "Squat Pulse", path: "legs", unlock_req: "3 × 15", mastery_req: "3 × 30", target_reps: 30 },
-  { name: "Jump Squat", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "180° Jump Squat", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 15", target_reps: 15 },
-  { name: "Split Squat", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Reverse Lunge", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Walking Lunge", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Bulgarian Split Squat", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Cossack Squat", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Shrimp Squat Assisted", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Shrimp Squat", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Assisted Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Box Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Negative Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Pistol Squat", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Paused Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Weighted Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Jumping Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Dragon Pistol", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Glute Bridge", path: "legs", unlock_req: "3 × 10", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Single Leg Glute Bridge", path: "legs", unlock_req: "3 × 8", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Nordic Curl Assisted", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Nordic Curl Negative", path: "legs", unlock_req: "3 × 5", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Nordic Curl", path: "legs", unlock_req: "3 × 3", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "Single Leg Nordic Curl", path: "legs", unlock_req: "3 × 1", mastery_req: "3 × 20", target_reps: 20 },
-  { name: "LEG MASTER", path: "legs", unlock_req: "1 × 1", mastery_req: "1 × 1", target_reps: 1 },
+  { name: "Air Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: [] },
+  { name: "Box Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Air Squat"] },
+  { name: "Tempo Squat (3 sec down)", path: "legs", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Box Squat"] },
+  { name: "Pause Squat (2 sec bottom)", path: "legs", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Tempo Squat (3 sec down)"] },
+  { name: "Narrow Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Pause Squat (2 sec bottom)"] },
+  { name: "Standard Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Pause Squat (2 sec bottom)"] },
+  { name: "Wide Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Pause Squat (2 sec bottom)"] },
+  { name: "Sumo Squat", path: "legs", mastery_req: "3 × 25", target_reps: 25, prerequisites: ["Pause Squat (2 sec bottom)"] },
+  { name: "Squat Pulse", path: "legs", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Narrow Squat", "Standard Squat", "Wide Squat", "Sumo Squat"] },
+  { name: "Jump Squat", path: "legs", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Squat Pulse"] },
+  { name: "180° Jump Squat", path: "legs", mastery_req: "3 × 15", target_reps: 15, prerequisites: ["Jump Squat"] },
+  { name: "Split Squat", path: "legs", mastery_req: "3 × 20 each leg", target_reps: 20, prerequisites: [] },
+  { name: "Reverse Lunge", path: "legs", mastery_req: "3 × 20 each leg", target_reps: 20, prerequisites: ["Split Squat"] },
+  { name: "Walking Lunge", path: "legs", mastery_req: "3 × 20 each leg", target_reps: 20, prerequisites: ["Reverse Lunge"] },
+  { name: "Bulgarian Split Squat", path: "legs", mastery_req: "3 × 15 each leg", target_reps: 15, prerequisites: ["Walking Lunge"] },
+  { name: "Cossack Squat", path: "legs", mastery_req: "3 × 15 each leg", target_reps: 15, prerequisites: ["Bulgarian Split Squat"] },
+  { name: "Shrimp Squat Assisted", path: "legs", mastery_req: "3 × 15 each leg", target_reps: 15, prerequisites: ["Bulgarian Split Squat"] },
+  { name: "Shrimp Squat", path: "legs", mastery_req: "3 × 10 each leg", target_reps: 10, prerequisites: ["Shrimp Squat Assisted"] },
+  { name: "Assisted Pistol", path: "legs", mastery_req: "3 × 15 each leg", target_reps: 15, prerequisites: ["Bulgarian Split Squat"] },
+  { name: "Box Pistol", path: "legs", mastery_req: "3 × 12 each leg", target_reps: 12, prerequisites: ["Assisted Pistol"] },
+  { name: "Negative Pistol", path: "legs", mastery_req: "3 × 10 each leg", target_reps: 10, prerequisites: ["Box Pistol"] },
+  { name: "Pistol Squat", path: "legs", mastery_req: "3 × 10 each leg", target_reps: 10, prerequisites: ["Negative Pistol"] },
+  { name: "Paused Pistol", path: "legs", mastery_req: "3 × 8 each leg", target_reps: 8, prerequisites: ["Pistol Squat"] },
+  { name: "Weighted Pistol", path: "legs", mastery_req: "3 × 8 each leg", target_reps: 8, prerequisites: ["Paused Pistol"] },
+  { name: "Jumping Pistol", path: "legs", mastery_req: "3 × 8 each leg", target_reps: 8, prerequisites: ["Weighted Pistol"] },
+  { name: "Dragon Pistol", path: "legs", mastery_req: "3 × 5 each leg", target_reps: 5, prerequisites: ["Jumping Pistol"] },
+  { name: "Glute Bridge", path: "legs", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Bulgarian Split Squat"] },
+  { name: "Single Leg Glute Bridge", path: "legs", mastery_req: "3 × 15 each leg", target_reps: 15, prerequisites: ["Glute Bridge"] },
+  { name: "Nordic Curl Assisted", path: "legs", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Single Leg Glute Bridge"] },
+  { name: "Nordic Curl Negative", path: "legs", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Nordic Curl Assisted"] },
+  { name: "Nordic Curl", path: "legs", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Nordic Curl Negative"] },
+  { name: "Single Leg Nordic Curl", path: "legs", mastery_req: "3 × 3 each leg", target_reps: 3, prerequisites: ["Nordic Curl"] },
+  { name: "LEG MASTER", path: "legs", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["180° Jump Squat", "Shrimp Squat", "Dragon Pistol", "Single Leg Nordic Curl", "Cossack Squat"] },
 
   // Push (40 items)
   { name: "Wall Push-up", path: "push", unlock_req: "3 × 10", mastery_req: "3 × 20", target_reps: 20 },
@@ -210,6 +212,15 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "ELITE MASTER", path: "elite", unlock_req: "1 × 1", mastery_req: "1 × 1", target_reps: 1 }
 ];
 
+const LEG_PATHS = {
+  "Foundation": ["Air Squat", "Box Squat", "Tempo Squat (3 sec down)", "Pause Squat (2 sec bottom)"],
+  "Stance": ["Narrow Squat", "Standard Squat", "Wide Squat", "Sumo Squat", "Squat Pulse", "Jump Squat", "180° Jump Squat"],
+  "Single Leg": ["Split Squat", "Reverse Lunge", "Walking Lunge", "Bulgarian Split Squat", "Cossack Squat"],
+  "Shrimp": ["Shrimp Squat Assisted", "Shrimp Squat"],
+  "Pistol": ["Assisted Pistol", "Box Pistol", "Negative Pistol", "Pistol Squat", "Paused Pistol", "Weighted Pistol", "Jumping Pistol", "Dragon Pistol"],
+  "Posterior Chain": ["Glute Bridge", "Single Leg Glute Bridge", "Nordic Curl Assisted", "Nordic Curl Negative", "Nordic Curl", "Single Leg Nordic Curl"]
+} as const;
+
 function getXpForDifficulty(difficulty: number): number {
   const xpMapping: Record<number, number> = {
     1: 50, 2: 100, 3: 160, 4: 230, 5: 310,
@@ -283,7 +294,8 @@ export default function AsvandCalisthenicsPage() {
           correct_form: s.correct_form || false,
           reps: s.reps || 0,
           target_reps: s.target_reps || 20,
-          sessions_hit: s.sessions_hit || 0
+          sessions_hit: s.sessions_hit || 0,
+          x3_completed: s.x3_completed || false
         })));
       }
     } catch (err) {
@@ -352,19 +364,51 @@ export default function AsvandCalisthenicsPage() {
   const eliteLocked = baseFourAvg < 100 || skillsAvg < 100;
   const eliteAvg = eliteLocked ? 0 : getPathAvg("elite");
 
-  // Helper to check unlock status
-  const isExerciseUnlocked = (exName: string, path: string) => {
-    const list = GUILD_CATALOG.filter(item => item.path === path);
-    const idx = list.findIndex(item => item.name === exName);
-    if (idx <= 0) return true; // first exercise is always unlocked
-
-    const prevEx = list[idx - 1];
-    const prevSkill = skills.find(s => s.exercise_name === prevEx.name);
-    return prevSkill ? prevSkill.mastery_percent >= 100 : false;
+  // Helper to get prerequisites for an exercise, falling back to linear order if not explicitly defined
+  const getPrerequisites = (item: CatalogItem) => {
+    if (item.prerequisites !== undefined) {
+      return item.prerequisites;
+    }
+    const pathList = GUILD_CATALOG.filter(x => x.path === item.path);
+    const idx = pathList.findIndex(x => x.name === item.name);
+    if (idx <= 0) return [];
+    return [pathList[idx - 1].name];
   };
 
-  // Save inline PR
-  const handleSaveInlinePr = async (exerciseName: string, value: number) => {
+  // Helper to check if an exercise is mastered (x3 completed and reps/seconds >= target reps/seconds)
+  const isExerciseMastered = (exName: string) => {
+    const catalogItem = GUILD_CATALOG.find(item => item.name === exName);
+    if (!catalogItem) return false;
+    const skill = skills.find(s => s.exercise_name === exName);
+    return skill ? (skill.x3_completed && skill.reps >= catalogItem.target_reps) : false;
+  };
+
+  // Helper to check unlock status
+  const isExerciseUnlocked = (exName: string, path?: string) => {
+    const item = GUILD_CATALOG.find(x => x.name === exName);
+    if (!item) return false;
+    
+    const prereqs = getPrerequisites(item);
+    if (prereqs.length === 0) return true;
+
+    return prereqs.every(prereqName => isExerciseMastered(prereqName));
+  };
+
+  // Helper to get all exercises unlocked by a given exercise
+  const getUnlocksForExercise = (exName: string) => {
+    return GUILD_CATALOG.filter(item => {
+      const prereqs = getPrerequisites(item);
+      return prereqs.includes(exName);
+    });
+  };
+
+  // Helper to check if a specific leg progression branch is fully completed
+  const isPathComplete = (pathName: keyof typeof LEG_PATHS) => {
+    return LEG_PATHS[pathName].every(exName => isExerciseMastered(exName));
+  };
+
+  // Save inline PR / Log Performance
+  const handleSaveInlinePr = async (exerciseName: string, value: number, isX3Click: boolean = false) => {
     if (!asvandId) return;
 
     try {
@@ -376,45 +420,63 @@ export default function AsvandCalisthenicsPage() {
       const masteryReps = catalogItem.target_reps;
       
       let unlockReps = 8;
-      if (catalogItem.unlock_req.includes("×")) {
-        unlockReps = parseInt(catalogItem.unlock_req.split("×")[1]) || 8;
-      }
-
-      const learned = value > 0;
-      const correctForm = value >= unlockReps;
-      const calculatedMastery = Math.min(100, Math.round((value / masteryReps) * 100));
-
-      if (currentSkill) {
-        const { error } = await supabase
-          .from("calisthenics_progress")
-          .update({
-            learned,
-            correct_form: correctForm,
-            reps: value,
-            sessions_hit: value >= masteryReps ? 3 : 1,
-            mastery_percent: calculatedMastery
-          })
-          .eq("profile_id", asvandId)
-          .eq("exercise_name", exerciseName);
-        if (error) throw error;
+      if (catalogItem.unlock_req) {
+        if (catalogItem.unlock_req.includes("×")) {
+          unlockReps = parseInt(catalogItem.unlock_req.split("×")[1].trim()) || 8;
+        } else if (catalogItem.unlock_req.toLowerCase().includes("hold")) {
+          const match = catalogItem.unlock_req.match(/\d+/);
+          if (match) {
+            unlockReps = parseInt(match[0]) || 8;
+          }
+        }
       } else {
-        const { error } = await supabase
-          .from("calisthenics_progress")
-          .insert({
-            profile_id: asvandId,
-            exercise_name: exerciseName,
-            path: pathName,
-            learned,
-            correct_form: correctForm,
-            reps: value,
-            target_reps: masteryReps,
-            sessions_hit: value >= masteryReps ? 3 : 1,
-            mastery_percent: calculatedMastery
-          });
-        if (error) throw error;
+        // Fallback for new Leg exercises: use a sensible portion of target reps (e.g. 40%)
+        unlockReps = Math.ceil(masteryReps * 0.4) || 1;
       }
 
-      // Log to pr_logs
+      const currentPrVal = currentSkill ? currentSkill.reps : 0;
+      
+      // Update best performance only if value >= currentPrVal
+      if (value >= currentPrVal) {
+        const learned = value > 0;
+        const correctForm = value >= unlockReps;
+        const calculatedMastery = Math.min(100, Math.round((value / masteryReps) * 100));
+        const x3Completed = isX3Click;
+
+        if (currentSkill) {
+          const { error } = await supabase
+            .from("calisthenics_progress")
+            .update({
+              learned,
+              correct_form: correctForm,
+              reps: value,
+              sessions_hit: value >= masteryReps ? 3 : 1,
+              mastery_percent: calculatedMastery,
+              x3_completed: x3Completed
+            })
+            .eq("profile_id", asvandId)
+            .eq("exercise_name", exerciseName);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("calisthenics_progress")
+            .insert({
+              profile_id: asvandId,
+              exercise_name: exerciseName,
+              path: pathName,
+              learned,
+              correct_form: correctForm,
+              reps: value,
+              target_reps: masteryReps,
+              sessions_hit: value >= masteryReps ? 3 : 1,
+              mastery_percent: calculatedMastery,
+              x3_completed: x3Completed
+            });
+          if (error) throw error;
+        }
+      }
+
+      // ALWAYS log to training history (pr_logs)
       const todayStr = new Date().toISOString().split("T")[0];
       await supabase
         .from("pr_logs")
@@ -424,13 +486,13 @@ export default function AsvandCalisthenicsPage() {
           value: value,
           unit: catalogItem.mastery_req.toLowerCase().includes("s") || catalogItem.mastery_req.toLowerCase().includes("sec") ? "sec" : "reps",
           date: todayStr,
-          notes: `Logged via inline PR Entry.`
+          notes: isX3Click ? `Logged via inline performance tracker (3 sets completed).` : `Logged via inline performance tracker.`
         });
 
       // Reload
       await loadData(asvandId);
     } catch (err) {
-      console.error("Error saving inline PR:", err);
+      console.error("Error logging performance:", err);
     }
   };
 
@@ -576,46 +638,156 @@ export default function AsvandCalisthenicsPage() {
                 return (
                   <div
                     key={exName}
-                    className={`p-4 rounded-2xl border transition-all ${
+                    className={`p-5 rounded-2xl border transition-all ${
                       isUnlocked 
                         ? "bg-surface1 border-border/40 text-white" 
-                        : "bg-[#101018]/30 border-border/10 text-secondary/30 opacity-40 select-none"
+                        : "bg-[#101018]/30 border-border/10 text-secondary/30 opacity-40"
                     }`}
                   >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      
-                      {/* Left: Name and requirement target details */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {!isUnlocked && <span className="text-xs">🔒</span>}
-                          <h3 className="font-extrabold text-sm">{exName}</h3>
-                        </div>
-                        <p className="text-[10px] text-secondary mt-1">
-                          Require <span className={isUnlocked ? "text-white font-bold" : ""}>{ex.mastery_req}</span> to unlock next level
-                        </p>
+                    <div className="flex flex-col gap-3.5">
+                      {/* Title */}
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-extrabold text-base tracking-wide">{exName}</h3>
+                        {(() => {
+                          if (!isUnlocked) {
+                            return <span className="text-xs text-danger font-bold uppercase tracking-wider">🔒 Locked</span>;
+                          }
+                          const mastered = isExerciseMastered(exName);
+                          if (mastered) {
+                            return <span className="text-xs text-success font-bold uppercase tracking-wider">✅ Mastered</span>;
+                          }
+                          return <span className="text-xs text-accent font-bold uppercase tracking-wider">⚡ Active</span>;
+                        })()}
                       </div>
 
-                      {/* Right: Inline PR display box and PR entry input */}
-                      <div className="flex items-center gap-3">
-                        
-                        {/* Current PR Box */}
-                        <div className="bg-[#181825] px-3.5 py-2 border border-border/30 rounded-xl text-center min-w-[90px]">
-                          <span className="text-[8px] text-secondary block uppercase font-semibold">Current PR</span>
-                          <span className="text-xs font-bold text-accent block mt-0.5">
-                            {currentPrVal !== null ? `${currentPrVal} ${unit}` : "—"}
+                      <div className="divider opacity-30 my-0.5" />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Master Requirement */}
+                        <div>
+                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Master Requirement</span>
+                          <span className={`text-xs font-bold ${isUnlocked ? "text-white" : "text-secondary/40"}`}>
+                            {exName === "LEG MASTER" ? "Complete all Leg Mastery paths" : ex.mastery_req}
                           </span>
                         </div>
 
-                        {/* Enter New PR Box */}
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            disabled={!isUnlocked}
-                            placeholder="Enter new PR"
-                            defaultValue=""
-                            id={`input-pr-${exName}`}
-                            className="w-24 bg-[#181825] py-2 px-2.5 border border-border/30 rounded-xl text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent disabled:opacity-50"
-                          />
+                        {/* Best Performance */}
+                        <div>
+                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Best Performance</span>
+                          <span className={`text-xs font-bold ${isUnlocked ? "text-accent" : "text-secondary/40"}`}>
+                            {currentPrVal !== null 
+                              ? (skillProgress?.x3_completed ? `3 × ${currentPrVal} ${unit}` : `1 × ${currentPrVal} ${unit}`) 
+                              : "—"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Unlock Graph / Successors */}
+                      {exName !== "LEG MASTER" ? (
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Unlocks */}
+                          <div>
+                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Unlocks</span>
+                            {(() => {
+                              const unlocksList = getUnlocksForExercise(exName);
+                              const directUnlocks = unlocksList.filter(item => getPrerequisites(item).length === 1);
+                              if (directUnlocks.length === 0) {
+                                return <span className="text-xs text-secondary/40 font-semibold italic">None</span>;
+                              }
+                              return (
+                                <div className="mt-0.5 flex flex-col gap-0.5">
+                                  {directUnlocks.map(unlockEx => {
+                                    const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
+                                    return (
+                                      <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                        <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
+                                          {isUnlockExUnlocked ? "✓" : "•"}
+                                        </span>
+                                        <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
+                                          {unlockEx.name}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Contributes To / Required For */}
+                          <div>
+                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Required For</span>
+                            {(() => {
+                              const unlocksList = getUnlocksForExercise(exName);
+                              const contributesTo = unlocksList.filter(item => getPrerequisites(item).length > 1);
+                              if (contributesTo.length === 0) {
+                                return <span className="text-xs text-secondary/40 font-semibold italic">None</span>;
+                              }
+                              return (
+                                <div className="mt-0.5 flex flex-col gap-0.5">
+                                  {contributesTo.map(unlockEx => {
+                                    const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
+                                    return (
+                                      <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                        <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
+                                          {isUnlockExUnlocked ? "✓" : "•"}
+                                        </span>
+                                        <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
+                                          {unlockEx.name}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      ) : (
+                        /* LEG MASTER Special Display */
+                        <div className="flex flex-col gap-2.5">
+                          <div>
+                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Prerequisite Branches</span>
+                            <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                              {Object.keys(LEG_PATHS).map(pathKey => {
+                                const complete = isPathComplete(pathKey as keyof typeof LEG_PATHS);
+                                return (
+                                  <div key={pathKey} className="flex items-center gap-1 text-xs">
+                                    <span className={complete ? "text-success font-bold" : "text-secondary/30"}>
+                                      {complete ? "✓" : "•"}
+                                    </span>
+                                    <span className={complete ? "text-white font-medium" : "text-secondary/40"}>
+                                      {pathKey}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
+                            <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
+                            <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
+                              <span>🏆 Leg Master Title</span>
+                              <span>⚡ +500 XP</span>
+                              <span>📚 Book Complete</span>
+                              <span>📜 Certificate Unlocked</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Log Performance Input Container */}
+                      <div className="mt-1 flex items-center justify-end gap-2">
+                        <input
+                          type="number"
+                          disabled={!isUnlocked}
+                          placeholder="Log reps / sec"
+                          defaultValue=""
+                          id={`input-pr-${exName}`}
+                          className="w-28 bg-[#181825] py-2 px-2.5 border border-border/30 rounded-xl text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent disabled:opacity-50"
+                        />
+                        <div className="flex gap-1">
                           <button
                             disabled={!isUnlocked}
                             onClick={async () => {
@@ -623,19 +795,34 @@ export default function AsvandCalisthenicsPage() {
                               if (inputEl) {
                                 const val = parseInt(inputEl.value);
                                 if (!isNaN(val) && val >= 0) {
-                                  await handleSaveInlinePr(exName, val);
+                                  await handleSaveInlinePr(exName, val, false);
                                   inputEl.value = "";
                                 }
                               }
                             }}
                             className="px-3.5 py-2 text-xs font-bold text-[#000] bg-accent rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
                           >
-                            Save
+                            Record
+                          </button>
+                          <button
+                            disabled={!isUnlocked}
+                            onClick={async () => {
+                              const inputEl = document.getElementById(`input-pr-${exName}`) as HTMLInputElement;
+                              if (inputEl) {
+                                const val = parseInt(inputEl.value);
+                                if (!isNaN(val) && val >= 0) {
+                                  await handleSaveInlinePr(exName, val, true);
+                                  inputEl.value = "";
+                                }
+                              }
+                            }}
+                            className="px-3.5 py-2 text-xs font-bold text-[#000] bg-success rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                            title="Log 3 sets at this value"
+                          >
+                            x3
                           </button>
                         </div>
-
                       </div>
-
                     </div>
                   </div>
                 );
