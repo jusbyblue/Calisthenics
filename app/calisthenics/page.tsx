@@ -234,22 +234,22 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "One-Arm Crow Pose", path: "skills", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Elbow Lever"] },
 
   // Inversions Branch
-  { name: "Headstand Hold", path: "skills", mastery_req: "Hold 45s", target_reps: 45, prerequisites: [] },
+  { name: "Headstand Hold", path: "skills", mastery_req: "Hold 45s", target_reps: 45, prerequisites: ["Crane Pose Hold"] },
   { name: "Tripod Transition", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Headstand Hold"] },
   { name: "Handstand Kick-up Assist", path: "skills", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Tripod Transition"] },
   { name: "Wall Walk Handstand", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Handstand Kick-up Assist"] },
   { name: "Freestanding Handstand Attempt", path: "skills", mastery_req: "Hold 10s", target_reps: 10, prerequisites: ["Wall Walk Handstand"] },
-  { name: "Handstand Press tuck", path: "skills", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Freestanding Handstand Attempt", "Crow Pose Hold"] },
+  { name: "Handstand Press tuck", path: "skills", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Freestanding Handstand Attempt", "Elbow Lever"] },
 
   // Movement Branch
-  { name: "Forward Roll", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: [] },
+  { name: "Forward Roll", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Headstand Hold"] },
   { name: "Backward Roll", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Forward Roll"] },
   { name: "Shoulder Roll", path: "skills", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Backward Roll"] },
   { name: "Kip-Up", path: "skills", mastery_req: "3 × 3", target_reps: 3, prerequisites: ["Shoulder Roll"] },
   { name: "Dive Roll", path: "skills", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Kip-Up"] },
 
   // Coordination Branch
-  { name: "Bear Crawl", path: "skills", mastery_req: "3 × 15m", target_reps: 15, prerequisites: [] },
+  { name: "Bear Crawl", path: "skills", mastery_req: "3 × 15m", target_reps: 15, prerequisites: ["Forward Roll"] },
   { name: "Crab Walk", path: "skills", mastery_req: "3 × 15m", target_reps: 15, prerequisites: ["Bear Crawl"] },
   { name: "Ape Walk", path: "skills", mastery_req: "3 × 15m", target_reps: 15, prerequisites: ["Bear Crawl"] },
   { name: "Frog Walk", path: "skills", mastery_req: "3 × 10m", target_reps: 10, prerequisites: ["Crab Walk", "Ape Walk"] },
@@ -257,7 +257,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Macaco", path: "skills", mastery_req: "3 × 4 each side", target_reps: 4, prerequisites: ["Cartwheel"] },
 
   // Bridge Branch
-  { name: "Bridge Hold", path: "skills", mastery_req: "Hold 30s", target_reps: 30, prerequisites: [] },
+  { name: "Bridge Hold", path: "skills", mastery_req: "Hold 30s", target_reps: 30, prerequisites: ["Bear Crawl"] },
   { name: "Bridge Rock", path: "skills", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Bridge Hold"] },
   { name: "Bridge Kickover", path: "skills", mastery_req: "3 × 5", target_reps: 5, prerequisites: ["Bridge Rock"] },
 
