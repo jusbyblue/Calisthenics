@@ -407,6 +407,9 @@ export default function AsvandCalisthenicsPage() {
 
   // Helper to check unlock status
   const isExerciseUnlocked = (exName: string, path?: string) => {
+    if (exName === "LEG MASTER") {
+      return Object.keys(LEG_PATHS).every(pathKey => isPathComplete(pathKey as keyof typeof LEG_PATHS));
+    }
     const item = GUILD_CATALOG.find(x => x.name === exName);
     if (!item) return false;
     
@@ -655,13 +658,32 @@ export default function AsvandCalisthenicsPage() {
             {(() => {
               const bookObj = bookOptions.find(b => b.key === activeBook);
               const progressVal = bookObj ? bookObj.avg : 0;
+              const pathExercises = GUILD_CATALOG.filter(item => item.path === activeBook);
+              const totalCount = pathExercises.length;
+              const masteredCount = pathExercises.filter(ex => isExerciseMastered(ex.name)).length;
+
+              const titleMapping = {
+                legs: "Leg Mastery Tree",
+                push: "Push Mastery Tree",
+                pull: "Pull Mastery Tree",
+                core: "Core Mastery Tree",
+                skills: "Skills Mastery Tree",
+                elite: "Elite Mastery Tree"
+              };
+              const treeTitle = titleMapping[activeBook as keyof typeof titleMapping] || "Mastery Tree";
+
               return (
-                <Card className="bg-surface1/40 border-border/20 py-4 px-5">
-                  <div className="flex justify-between items-center text-xs text-secondary mb-1.5 font-semibold">
-                    <span>PATH PROGRESS</span>
-                    <span className="text-accent font-extrabold">{progressVal}% COMPLETE</span>
+                <Card className="bg-surface1/40 border-border/20 py-4.5 px-5">
+                  <div className="flex justify-between items-center text-xs mb-2">
+                    <span className="font-extrabold text-white uppercase tracking-wider">{treeTitle}</span>
+                    <span className="text-accent font-mono font-bold">{progressVal}% COMPLETE</span>
                   </div>
-                  <ProgressBar value={progressVal} color="var(--accent)" height={5} />
+                  <div className="mb-2">
+                    <ProgressBar value={progressVal} color="var(--accent)" height={6} />
+                  </div>
+                  <div className="text-[10px] text-secondary font-semibold font-mono">
+                    {masteredCount} / {totalCount} Exercises Mastered
+                  </div>
                 </Card>
               );
             })()}
@@ -693,6 +715,7 @@ export default function AsvandCalisthenicsPage() {
                 return (
                   <div
                     key={exName}
+                    id={`exercise-card-${exName.replace(/\s+/g, "-")}`}
                     className={`p-5 rounded-2xl border transition-all ${
                       isUnlocked 
                         ? "bg-surface1 border-border/40 text-white" 
@@ -711,50 +734,83 @@ export default function AsvandCalisthenicsPage() {
                           if (mastered) {
                             return <span className="text-xs text-success font-bold uppercase tracking-wider">✅ Mastered</span>;
                           }
-                          return <span className="text-xs text-accent font-bold uppercase tracking-wider">⚡ Active</span>;
+                          const masteryPercent = skillProgress?.mastery_percent || 0;
+                          return (
+                            <span className="text-xs text-accent font-bold uppercase tracking-wider">
+                              ⚡ {masteryPercent}%
+                            </span>
+                          );
                         })()}
                       </div>
 
                       <div className="divider opacity-30 my-0.5" />
 
+                      {isUnlocked && !isExerciseMastered(exName) && (
+                        <div className="mb-1">
+                          <ProgressBar value={skillProgress?.mastery_percent || 0} color="var(--accent)" height={4} />
+                        </div>
+                      )}
+
                       {!isUnlocked ? (
                         /* Locked Exercise Layout: Show Prerequisite Checklist */
                         <div className="mt-1">
-                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-1.5">Requires Unlocks</span>
-                          {(() => {
-                            const prereqRules = getPrerequisites(ex);
-                            const list = Array.isArray(prereqRules) ? prereqRules : prereqRules.exercises;
-                            const isOrRelation = !Array.isArray(prereqRules) && prereqRules.type === "or";
-                            
-                            return (
-                              <div className="flex flex-col gap-1">
-                                {isOrRelation && (
-                                  <span className="text-[10px] text-secondary/70 italic block mb-1">
-                                    Complete any one of the following:
+                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-0.5">Requirements</span>
+                          {exName === "LEG MASTER" ? (
+                            <div className="flex flex-col gap-1.5 mt-2">
+                              {Object.keys(LEG_PATHS).map(pathKey => {
+                                const complete = isPathComplete(pathKey as keyof typeof LEG_PATHS);
+                                return (
+                                  <div key={pathKey} className="flex items-center gap-2 text-xs">
+                                    <span>{complete ? "✅" : "⬜"}</span>
+                                    <span className={complete ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
+                                      {pathKey} Tree
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            (() => {
+                              const prereqRules = getPrerequisites(ex);
+                              const list = Array.isArray(prereqRules) ? prereqRules : prereqRules.exercises;
+                              const totalReqs = list.length;
+                              const completedCount = list.filter(prereqName => isExerciseMastered(prereqName)).length;
+                              const remaining = totalReqs - completedCount;
+                              const isOrRelation = !Array.isArray(prereqRules) && prereqRules.type === "or";
+                              
+                              return (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] text-secondary/70 block mb-1 font-mono">
+                                    {remaining} {remaining === 1 ? "requirement" : "requirements"} remaining
                                   </span>
-                                )}
-                                {list.map(prereqName => {
-                                  const mastered = isExerciseMastered(prereqName);
-                                  return (
-                                    <div key={prereqName} className="flex items-center gap-2 text-xs">
-                                      <span>{mastered ? "✅" : "⬜"}</span>
-                                      <span className={mastered ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
-                                        {prereqName}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })()}
+                                  {isOrRelation && (
+                                    <span className="text-[10px] text-secondary/70 italic block mb-1">
+                                      Complete any one of the following:
+                                    </span>
+                                  )}
+                                  {list.map(prereqName => {
+                                    const mastered = isExerciseMastered(prereqName);
+                                    return (
+                                      <div key={prereqName} className="flex items-center gap-2 text-xs">
+                                        <span>{mastered ? "✅" : "⬜"}</span>
+                                        <span className={mastered ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
+                                          {prereqName}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()
+                          )}
                         </div>
                       ) : (
                         /* Unlocked Exercise Layout */
                         <>
                           <div className="grid grid-cols-2 gap-4">
-                            {/* Master Requirement */}
+                            {/* Mastery Requirement */}
                             <div>
-                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Master Requirement</span>
+                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Mastery Requirement</span>
                               <span className="text-xs font-bold text-white">
                                 {exName === "LEG MASTER" ? "Complete all Leg Mastery paths" : ex.mastery_req}
                               </span>
@@ -807,17 +863,32 @@ export default function AsvandCalisthenicsPage() {
                                   {directUnlocks.length > 0 && (
                                     <div>
                                       <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Unlocks</span>
-                                      <div className="mt-0.5 flex flex-col gap-0.5">
+                                      <div className="mt-1 flex flex-col gap-1">
                                         {directUnlocks.map(unlockEx => {
                                           const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
                                           return (
-                                            <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                            <div key={unlockEx.name} className="flex items-center gap-1.5 text-xs">
                                               <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
                                                 {isUnlockExUnlocked ? "✓" : "•"}
                                               </span>
-                                              <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
-                                                {unlockEx.name}
-                                              </span>
+                                              <button
+                                                onClick={() => {
+                                                  const targetEl = document.getElementById(`exercise-card-${unlockEx.name.replace(/\s+/g, "-")}`);
+                                                  if (targetEl) {
+                                                    targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    setTimeout(() => {
+                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    }, 2000);
+                                                  }
+                                                }}
+                                                className={`text-left font-medium hover:underline hover:cursor-pointer flex items-center gap-0.5 ${
+                                                  isUnlockExUnlocked ? "text-accent" : "text-secondary/40"
+                                                }`}
+                                              >
+                                                <span>{unlockEx.name}</span>
+                                                <span className="text-[9px] opacity-80 font-bold">→</span>
+                                              </button>
                                             </div>
                                           );
                                         })}
@@ -829,17 +900,32 @@ export default function AsvandCalisthenicsPage() {
                                   {contributesTo.length > 0 && (
                                     <div>
                                       <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Contributes To</span>
-                                      <div className="mt-0.5 flex flex-col gap-0.5">
+                                      <div className="mt-1 flex flex-col gap-1">
                                         {contributesTo.map(unlockEx => {
                                           const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
                                           return (
-                                            <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                            <div key={unlockEx.name} className="flex items-center gap-1.5 text-xs">
                                               <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
                                                 {isUnlockExUnlocked ? "✓" : "•"}
                                               </span>
-                                              <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
-                                                {unlockEx.name}
-                                              </span>
+                                              <button
+                                                onClick={() => {
+                                                  const targetEl = document.getElementById(`exercise-card-${unlockEx.name.replace(/\s+/g, "-")}`);
+                                                  if (targetEl) {
+                                                    targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    setTimeout(() => {
+                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    }, 2000);
+                                                  }
+                                                }}
+                                                className={`text-left font-medium hover:underline hover:cursor-pointer flex items-center gap-0.5 ${
+                                                  isUnlockExUnlocked ? "text-accent" : "text-secondary/40"
+                                                }`}
+                                              >
+                                                <span>{unlockEx.name}</span>
+                                                <span className="text-[9px] opacity-80 font-bold">→</span>
+                                              </button>
                                             </div>
                                           );
                                         })}
@@ -863,7 +949,7 @@ export default function AsvandCalisthenicsPage() {
                                           {complete ? "✓" : "•"}
                                         </span>
                                         <span className={complete ? "text-white font-medium" : "text-secondary/40"}>
-                                          {pathKey}
+                                          {pathKey} Tree
                                         </span>
                                       </div>
                                     );
