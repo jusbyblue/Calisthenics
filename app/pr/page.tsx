@@ -299,11 +299,23 @@ export default function PRPage() {
     const targetVal = msRecord.value;
     const isCompleted = msRecord.completed || (bestLog && bestLog.value >= targetVal);
     const currentVal = bestLog ? bestLog.value : 0;
-    
+    const percent = Math.min(100, Math.max(0, Math.round((currentVal / targetVal) * 100)));
+
     return (
-      <span className={`text-[9.5px] mt-1 font-bold block ${isCompleted ? "text-success" : "text-warning"}`}>
-        Target: {targetVal} {unitVal} {isCompleted ? "• Completed: Yes 🎉" : `• Progress: ${currentVal} / ${targetVal}`}
-      </span>
+      <div className="flex flex-col gap-1 mt-1.5 max-w-[240px]">
+        <div className="flex justify-between items-center text-[9px] font-bold">
+          <span className={isCompleted ? "text-success" : "text-warning"}>
+            Target: {targetVal} {unitVal} {isCompleted ? "🎉" : ""}
+          </span>
+          <span className="text-secondary">{currentVal} / {targetVal} ({percent}%)</span>
+        </div>
+        <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-success' : 'bg-accent'}`}
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+      </div>
     );
   };
 

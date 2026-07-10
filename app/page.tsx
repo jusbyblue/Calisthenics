@@ -137,10 +137,12 @@ export default function Dashboard() {
   const [skills, setSkills] = useState<CalisthenicsProgress[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
   const [prLogs, setPrLogs] = useState<PrLogItem[]>([]);
+  const [activeTargets, setActiveTargets] = useState<{ exercise: string; targetValue: number; currentValue: number; unit: string; completed: boolean }[]>([]);
+  const [weightTarget, setWeightTarget] = useState<{ current: number; target: number; unit: string } | null>(null);
 
   const loadData = async (profileId: string) => {
     try {
-      const [progressRes, prRes] = await Promise.all([
+      const [progressRes, prRes, targetsRes, weightRes] = await Promise.all([
         supabase
           .from("calisthenics_progress")
           .select("*")
@@ -149,7 +151,17 @@ export default function Dashboard() {
           .from("pr_logs")
           .select("*")
           .eq("profile_id", profileId)
+          .order("date", { ascending: false }),
+        supabase
+          .from("pr_milestones")
+          .select("*")
+          .eq("profile_id", profileId),
+        supabase
+          .from("measurements")
+          .select("*")
+          .eq("profile_id", profileId)
           .order("date", { ascending: false })
+          .limit(1)
       ]);
 
       if (progressRes.data) {
@@ -172,6 +184,41 @@ export default function Dashboard() {
           date: log.date,
           notes: log.notes
         })));
+      }
+
+      // Compute weight targets
+      let latestWeight: number | null = null;
+      if (weightRes.data && weightRes.data.length > 0) {
+        latestWeight = Number(weightRes.data[0].weight_kg);
+      }
+
+      const storedGoals = localStorage.getItem("calisthenics_measurement_goals");
+      if (storedGoals) {
+        try {
+          const parsed = JSON.parse(storedGoals);
+          if (parsed.weight_kg && latestWeight) {
+            setWeightTarget({
+              current: latestWeight,
+              target: parsed.weight_kg,
+              unit: "kg"
+            });
+          }
+        } catch (e) {}
+      }
+
+      if (targetsRes.data) {
+        const mapped = targetsRes.data.map((tg: any) => {
+          const matchedPrs = prRes.data ? prRes.data.filter((r: any) => r.exercise === tg.exercise) : [];
+          const bestPr = matchedPrs.reduce((max: number, r: any) => r.value > max ? r.value : max, 0);
+          return {
+            exercise: tg.exercise,
+            targetValue: tg.value,
+            currentValue: bestPr,
+            unit: tg.unit || "reps",
+            completed: tg.completed || (bestPr >= tg.value)
+          };
+        });
+        setActiveTargets(mapped);
       }
     } catch (err) {
       console.error("Error loading Dashboard data:", err);
@@ -800,6 +847,46 @@ export default function Dashboard() {
             </div>
           </div>
         </Card>
+
+        {/* Active Targets Card */}
+        {((activeTargets && activeTargets.length > 0) || weightTarget) && (
+          <Card className="bg-[#121221]/90">
+            <CardLabel>🎯 Active Targets</CardLabel>
+            <div className="flex flex-col gap-3.5 mt-2">
+              {weightTarget && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-xs font-bold">
+                    <span className="text-white flex items-center gap-1.5">⚖️ Weight</span>
+                    <span className="text-secondary">{weightTarget.current} / {weightTarget.target} {weightTarget.unit}</span>
+                  </div>
+                  <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                    <div
+                      className="bg-accent h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, (weightTarget.current / weightTarget.target) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              {activeTargets.map((tg) => {
+                const percent = Math.min(100, Math.max(0, Math.round((tg.currentValue / tg.targetValue) * 100)));
+                return (
+                  <div key={tg.exercise} className="flex flex-col gap-1">
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="text-white">{tg.exercise}</span>
+                      <span className="text-secondary">{tg.currentValue} / {tg.targetValue} {tg.unit}</span>
+                    </div>
+                    <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${tg.completed ? 'bg-success' : 'bg-accent'}`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
 
         {/* What Should I Do Next? - Today's Target Card */}
         <Card className="border border-accent/20 bg-accent/5">
