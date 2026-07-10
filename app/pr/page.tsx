@@ -243,24 +243,22 @@ export default function PRPage() {
     }
   };
 
-  const saveMilestonesData = async (profileId: string, updated: MilestoneRecord[]) => {
+  const saveMilestonesData = async (profileId: string, updated: MilestoneRecord[], targetItem: Omit<MilestoneRecord, "id">) => {
     setMilestones(updated);
     localStorage.setItem("calisthenics_milestones", JSON.stringify(updated));
     
     // Attempt saving to supabase table
     try {
-      // Check if we can write to DB
-      const target = updated[updated.length - 1];
       const { error } = await supabase
         .from("pr_milestones")
         .upsert({
           profile_id: profileId,
-          exercise: target.exercise,
-          value: target.value,
-          completed: target.completed
+          exercise: targetItem.exercise,
+          value: targetItem.value,
+          completed: targetItem.completed
         }, { onConflict: "profile_id,exercise" });
     } catch (err) {
-      console.warn("Could not sync milestone to database, saved locally.");
+      console.warn("Could not sync milestone to database, saved locally.", err);
     }
   };
 
@@ -377,6 +375,12 @@ export default function PRPage() {
       const existingIdx = milestones.findIndex(m => m.exercise === formExercise);
       let updatedList = [...milestones];
       
+      const targetItem = {
+        exercise: formExercise,
+        value: parsedVal,
+        completed: formCompleted
+      };
+
       if (existingIdx > -1) {
         updatedList[existingIdx] = {
           ...updatedList[existingIdx],
@@ -392,7 +396,7 @@ export default function PRPage() {
         });
       }
 
-      await saveMilestonesData(asvandId, updatedList);
+      await saveMilestonesData(asvandId, updatedList, targetItem);
       setFormValue("");
       setIsEditOpen(false);
     } catch (err: any) {
@@ -756,6 +760,55 @@ export default function PRPage() {
             </div>
           </div>
         )}
+
+        {/* Recent Logs & History (with Edit/Delete support) */}
+        <Card className="mt-6 border border-border bg-surface1">
+          <CardLabel>Recent Logs History</CardLabel>
+          {prRecords.length === 0 ? (
+            <p className="text-xs text-secondary italic py-4 text-center">No PR logs recorded yet</p>
+          ) : (
+            <div className="flex flex-col gap-2.5 mt-2">
+              {prRecords.slice(0, 15).map(r => (
+                <div key={r.id} className="flex justify-between items-center py-2.5 border-b border-border/10 text-xs">
+                  <div className="flex-1 pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white font-bold">{r.exercise}</span>
+                      <span className="text-[9px] text-secondary font-mono">{r.date}</span>
+                    </div>
+                    {r.notes && <p className="text-[10px] text-secondary mt-0.5 italic">"{r.notes}"</p>}
+                  </div>
+                  <div className="flex items-center gap-3.5">
+                    <span className="font-extrabold text-accent">{r.value} {r.unit}</span>
+                    
+                    {/* Delete Action */}
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Delete PR log for ${r.exercise} (${r.value} ${r.unit})?`)) {
+                          try {
+                            const { error } = await supabase
+                              .from("pr_logs")
+                              .delete()
+                              .eq("id", r.id);
+                            if (error) throw error;
+                            loadData(asvandId!);
+                          } catch (err: any) {
+                            alert(err.message || "Failed to delete PR");
+                          }
+                        }
+                      }}
+                      className="text-[#FF4A4A] hover:text-[#FF2A2A] active:scale-95 transition-all cursor-pointer"
+                      title="Delete Log"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
       </div>
       <NavBar />

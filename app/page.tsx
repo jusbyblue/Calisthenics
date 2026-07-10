@@ -6,7 +6,14 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardInner, CardLabel } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { NavBar } from "@/components/ui/NavBar";
-import { GUILD_CATALOG, CatalogItem } from "./calisthenics/page";
+import {
+  GUILD_CATALOG,
+  CatalogItem,
+  getXpForDifficulty,
+  getCalisthenicsLevelInfo,
+  skillsLocked as isSkillsLockedFunc,
+  eliteLocked as isEliteLockedFunc
+} from "@/lib/calisthenicsConfig";
 
 interface CalisthenicsProgress {
   exercise_name: string;
@@ -23,112 +30,6 @@ interface PrLogItem {
   unit: string;
   date: string;
   notes?: string;
-}
-
-const EXERCISE_ORDER: Record<string, string[]> = {
-  legs: [
-    "Air Squat", "Box Squat", "Tempo Squat (3 sec down)", "Pause Squat (2 sec bottom)",
-    "Narrow Squat", "Standard Squat", "Wide Squat", "Sumo Squat", "Squat Pulse",
-    "Jump Squat", "180° Jump Squat", "Split Squat", "Reverse Lunge", "Walking Lunge",
-    "Bulgarian Split Squat", "Cossack Squat", "Shrimp Squat Assisted", "Shrimp Squat",
-    "Assisted Pistol", "Box Pistol", "Negative Pistol", "Pistol Squat", "Paused Pistol",
-    "Weighted Pistol", "Jumping Pistol", "Dragon Pistol", "Glute Bridge", "Single Leg Glute Bridge",
-    "Nordic Curl Assisted", "Nordic Curl Negative", "Nordic Curl", "Single Leg Nordic Curl",
-    "LEG MASTER"
-  ],
-  push: [
-    "Wall Push-up", "High Incline Push-up", "Incline Push-up", "Knee Push-up",
-    "Negative Push-up", "Standard Push-up", "Wide Push-up", "Decline Push-up",
-    "Ring Push-up", "Deep Ring Push-up", "Diamond Push-up", "Archer Push-up",
-    "Pseudo Planche Push-up", "One-Arm Incline Push-up", "One-Arm Push-up",
-    "Dips (Bench)", "Standard Dips", "Ring Dips", "Weighted Dips", "Pike Push-up",
-    "Elevated Pike Push-up", "Wall Handstand Kick-up", "Wall Handstand Hold",
-    "Freestanding Handstand Hold", "Handstand Wall Walk", "Handstand Shoulder Tap",
-    "Handstand Push-up", "90 Degree Push-up", "L-Sit to Handstand Press",
-    "Clap Push-up", "Superman Push-up", "Explosive Dips", "Planche Lean",
-    "Tuck Planche", "Advanced Tuck Planche", "Straddle Planche Lean",
-    "Straddle Planche Hold", "Full Planche", "One-Arm Handstand", "PUSH MASTER"
-  ],
-  pull: [
-    "Dead Hang", "Scapular Pull-up", "Australian Row", "Inverted Row",
-    "Jackknife Pull-up", "Negative Chin-up", "Chin-up", "Neutral Grip Pull-up",
-    "Standard Pull-up", "L-Sit Pull-up", "Weighted Pull-up", "Wide Grip Pull-up",
-    "Commando Pull-up", "Towel Pull-up", "Archer Pull-up", "High Pull-up (Chest-to-bar)",
-    "Kipping Muscle-up", "Clean Muscle-up", "L-Sit Muscle-up", "Weighted Muscle-up",
-    "Ring Muscle-up", "Explosive Pull-up", "One-Arm Dead Hang", "One-Arm Inverted Row",
-    "One-Arm Pull-up Assist", "One-Arm Negative", "One-Arm Pull-up", "Back Lever Hold",
-    "Skin the Cat", "Tuck Front Lever", "Advanced Tuck Front Lever", "Straddle Front Lever",
-    "Full Front Lever", "Pull-up to Front Lever", "Front Lever Pull-up",
-    "Tuck Human Flag", "Human Flag Hold", "Dragon Flag", "Grip Master", "PULL MASTER"
-  ],
-  core: [
-    "Plank", "Side Plank", "Lying Leg Raise", "Hollow Body Hold", "Arch Hold",
-    "Knee Raise (Hanging)", "Leg Raise (Hanging)", "Windshield Wiper Assist",
-    "Windshield Wiper", "Toes to Bar", "L-Sit (Parallel Bars)", "L-Sit (Floor)",
-    "V-Sit", "Manna Assist", "Manna Hold", "Dragon Flag Assist", "Dragon Flag",
-    "Human Flag Tuck Core", "Human Flag Straddle Core", "Human Flag Hold Core",
-    "Ab Wheel Rollout (Knees)", "Ab Wheel Rollout (Feet)", "Standing Cable Crunch",
-    "Russian Twist (Weighted)", "Hanging Rotational Raise", "Core Twister",
-    "Reverse Hyperextension", "Superman Hold", "Bird Dog", "Pallof Press",
-    "Plank Walkout", "Core Master (Plank Max)", "CORE MASTER"
-  ],
-  skills: [
-    "Crow Pose Hold", "Elbow Lever", "Headstand Hold", "Tripod Transition",
-    "Kip-Up", "L-Sit Hold", "V-Sit Hold", "Handstand Kick-up Assist",
-    "Wall Walk Handstand", "Freestanding Handstand Attempt", "Handstand Press tuck",
-    "Back Lever Tuck", "Front Lever Tuck", "Clapping Pull-up", "SKILLS MASTER"
-  ],
-  elite: [
-    "One-Arm Pull-up", "One-Arm Handstand Hold", "Full Planche Hold",
-    "Iron Cross (Rings)", "Victorian Cross", "Manna Full Hold", "ELITE MASTER"
-  ]
-};
-
-// Automatic XP generator based on difficulty
-function getXpForDifficulty(difficulty: number): number {
-  const xpMapping: Record<number, number> = {
-    1: 50, 2: 100, 3: 160, 4: 230, 5: 310,
-    6: 400, 7: 500, 8: 620, 9: 760, 10: 950
-  };
-  return xpMapping[difficulty] ?? 50;
-}
-
-// Leveling formula matching the skill tree
-function getCalisthenicsLevelInfo(xp: number) {
-  let level = 1;
-  const getCumulativeXpForLevel = (l: number) => {
-    if (l <= 1) return 0;
-    return 200 * (l - 1) + 20 * (l - 1) * (l - 2);
-  };
-
-  while (xp >= getCumulativeXpForLevel(level + 1)) {
-    level++;
-  }
-
-  const xpForCurrent = getCumulativeXpForLevel(level);
-  const xpForNext = getCumulativeXpForLevel(level + 1);
-  const currentLevelProgressXp = xp - xpForCurrent;
-  const levelXpDifference = xpForNext - xpForCurrent;
-  const progress = levelXpDifference > 0 
-    ? Math.min(100, Math.max(0, (currentLevelProgressXp / levelXpDifference) * 100))
-    : 100;
-
-  let title = "Recruit";
-  if (level >= 35) title = "Grandmaster Legend";
-  else if (level >= 28) title = "Beast Mode Overlord";
-  else if (level >= 22) title = "Bar Specialist Elite";
-  else if (level >= 16) title = "Gymnast Pro";
-  else if (level >= 10) title = "Warrior";
-  else if (level >= 5) title = "Dedicated Novice";
-
-  return {
-    level,
-    currentXp: xp - xpForCurrent,
-    nextLevelXp: levelXpDifference,
-    totalXp: xp,
-    progress,
-    title,
-  };
 }
 
 export default function Dashboard() {
@@ -279,10 +180,10 @@ export default function Dashboard() {
   const coreAvg = getPathAvg("core");
   const baseFourAvg = Math.round((legsAvg + pushAvg + pullAvg + coreAvg) / 4);
 
-  const skillsLocked = baseFourAvg < 60;
+  const skillsLocked = isSkillsLockedFunc(baseFourAvg);
   const skillsAvg = skillsLocked ? 0 : getPathAvg("skills");
 
-  const eliteLocked = baseFourAvg < 100 || skillsAvg < 100;
+  const eliteLocked = isEliteLockedFunc(baseFourAvg, skillsAvg);
   const eliteAvg = eliteLocked ? 0 : getPathAvg("elite");
 
   const overallAverage = Math.round((legsAvg + pushAvg + pullAvg + coreAvg + skillsAvg + eliteAvg) / 6);
@@ -290,7 +191,7 @@ export default function Dashboard() {
 
   // Total exercises in the database
   const totalExercises = useMemo(() => {
-    return Object.values(EXERCISE_ORDER).reduce((sum, list) => sum + list.length, 0);
+    return GUILD_CATALOG.length;
   }, []);
 
   const pathStats = useMemo(() => {
