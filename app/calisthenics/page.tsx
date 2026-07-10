@@ -203,12 +203,12 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Manna Hold", path: "core", mastery_req: "Hold 5s", target_reps: 5, prerequisites: ["Manna Assist"] },
 
   // Rotation Branch
-  { name: "Side Plank", path: "core", mastery_req: "Hold 60s", target_reps: 60, prerequisites: [] },
+  { name: "Side Plank", path: "core", mastery_req: "Hold 60s", target_reps: 60, prerequisites: ["Plank"] },
   { name: "Windshield Wiper Assist", path: "core", mastery_req: "3 × 12", target_reps: 12, prerequisites: ["Side Plank"] },
   { name: "Windshield Wiper", path: "core", mastery_req: "3 × 10", target_reps: 10, prerequisites: ["Windshield Wiper Assist"] },
 
   // Extension Branch
-  { name: "Bird Dog", path: "core", mastery_req: "3 × 20", target_reps: 20, prerequisites: [] },
+  { name: "Bird Dog", path: "core", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Plank"] },
   { name: "Superman Hold", path: "core", mastery_req: "Hold 45s", target_reps: 45, prerequisites: ["Bird Dog"] },
   { name: "Reverse Hyperextension", path: "core", mastery_req: "3 × 20", target_reps: 20, prerequisites: ["Superman Hold"] },
 
@@ -223,7 +223,7 @@ const GUILD_CATALOG: CatalogItem[] = [
   { name: "Ab Wheel Rollout (Feet)", path: "core", mastery_req: "3 × 8", target_reps: 8, prerequisites: ["Ab Wheel Rollout (Knees)"] },
 
   // Mastery Endpoints
-  { name: "Core Master (Plank Max)", path: "core", mastery_req: "Hold 120s", target_reps: 120, prerequisites: ["Arch Hold", "Toes to Bar", "L-Sit (Floor)", "Windshield Wiper", "Reverse Hyperextension", "Plank Walkout", "Ab Wheel Rollout (Knees)"] },
+  { name: "Core Master (Plank Max)", path: "core", mastery_req: "Hold 120s", target_reps: 120, prerequisites: ["Arch Hold", "Toes to Bar", "V-Sit", "Windshield Wiper", "Reverse Hyperextension", "Plank Walkout", "Ab Wheel Rollout (Feet)"] },
   { name: "CORE MASTER", path: "core", mastery_req: "1 × 1", target_reps: 1, prerequisites: ["Core Master (Plank Max)", "Manna Hold", "Dragon Flag", "Ab Wheel Rollout (Feet)"] },
 
   // Skills & Balance (15 items)
