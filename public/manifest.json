@@ -1,0 +1,11 @@
+{
+  "name": "Calisthenics Athlete Platform",
+  "short_name": "Calisthenics",
+  "description": "A premium athlete progression and skill tree platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
+  "orientation": "portrait",
+  "icons": []
+}
