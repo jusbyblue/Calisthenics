@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS calisthenics_progress (
   target_reps      INTEGER DEFAULT 20,
   sessions_hit     INTEGER DEFAULT 0,
   x3_completed     BOOLEAN DEFAULT FALSE,
+  best_performance_date DATE DEFAULT CURRENT_DATE,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(profile_id, exercise_name)
 );

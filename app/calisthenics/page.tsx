@@ -18,6 +18,12 @@ interface SkillItem {
   target_reps: number;
   sessions_hit: number;
   x3_completed?: boolean;
+  best_performance_date?: string;
+}
+
+interface PrereqRule {
+  type: "and" | "or";
+  exercises: string[];
 }
 
 // Unified exercise catalog with unlock requirements and mastery targets
@@ -27,7 +33,7 @@ interface CatalogItem {
   unlock_req?: string;
   mastery_req: string;
   target_reps: number;
-  prerequisites?: string[];
+  prerequisites?: string[] | PrereqRule;
 }
 
 const GUILD_CATALOG: CatalogItem[] = [
@@ -295,7 +301,8 @@ export default function AsvandCalisthenicsPage() {
           reps: s.reps || 0,
           target_reps: s.target_reps || 20,
           sessions_hit: s.sessions_hit || 0,
-          x3_completed: s.x3_completed || false
+          x3_completed: s.x3_completed || false,
+          best_performance_date: s.best_performance_date || null
         })));
       }
     } catch (err) {
@@ -364,8 +371,23 @@ export default function AsvandCalisthenicsPage() {
   const eliteLocked = baseFourAvg < 100 || skillsAvg < 100;
   const eliteAvg = eliteLocked ? 0 : getPathAvg("elite");
 
+  // Helper to check if a prerequisite rule is met
+  const isRuleMet = (rule: string[] | PrereqRule | undefined): boolean => {
+    if (!rule) return true;
+    if (Array.isArray(rule)) {
+      return rule.every(exName => isExerciseMastered(exName));
+    }
+    if (rule.type === "and") {
+      return rule.exercises.every(exName => isExerciseMastered(exName));
+    }
+    if (rule.type === "or") {
+      return rule.exercises.some(exName => isExerciseMastered(exName));
+    }
+    return false;
+  };
+
   // Helper to get prerequisites for an exercise, falling back to linear order if not explicitly defined
-  const getPrerequisites = (item: CatalogItem) => {
+  const getPrerequisites = (item: CatalogItem): string[] | PrereqRule => {
     if (item.prerequisites !== undefined) {
       return item.prerequisites;
     }
@@ -389,16 +411,17 @@ export default function AsvandCalisthenicsPage() {
     if (!item) return false;
     
     const prereqs = getPrerequisites(item);
-    if (prereqs.length === 0) return true;
-
-    return prereqs.every(prereqName => isExerciseMastered(prereqName));
+    return isRuleMet(prereqs);
   };
 
   // Helper to get all exercises unlocked by a given exercise
   const getUnlocksForExercise = (exName: string) => {
     return GUILD_CATALOG.filter(item => {
       const prereqs = getPrerequisites(item);
-      return prereqs.includes(exName);
+      if (Array.isArray(prereqs)) {
+        return prereqs.includes(exName);
+      }
+      return prereqs.exercises.includes(exName);
     });
   };
 
@@ -408,7 +431,14 @@ export default function AsvandCalisthenicsPage() {
   };
 
   // Save inline PR / Log Performance
-  const handleSaveInlinePr = async (exerciseName: string, value: number, isX3Click: boolean = false) => {
+  const handleSaveInlinePr = async (
+    exerciseName: string, 
+    value: number, 
+    isX3Click: boolean = false,
+    sets: number = 3,
+    weight: number | null = null,
+    notes: string = ""
+  ) => {
     if (!asvandId) return;
 
     try {
@@ -435,13 +465,14 @@ export default function AsvandCalisthenicsPage() {
       }
 
       const currentPrVal = currentSkill ? currentSkill.reps : 0;
+      const todayStr = new Date().toISOString().split("T")[0];
       
       // Update best performance only if value >= currentPrVal
       if (value >= currentPrVal) {
         const learned = value > 0;
         const correctForm = value >= unlockReps;
         const calculatedMastery = Math.min(100, Math.round((value / masteryReps) * 100));
-        const x3Completed = isX3Click;
+        const x3Completed = isX3Click || sets >= 3;
 
         if (currentSkill) {
           const { error } = await supabase
@@ -452,7 +483,8 @@ export default function AsvandCalisthenicsPage() {
               reps: value,
               sessions_hit: value >= masteryReps ? 3 : 1,
               mastery_percent: calculatedMastery,
-              x3_completed: x3Completed
+              x3_completed: x3Completed,
+              best_performance_date: todayStr
             })
             .eq("profile_id", asvandId)
             .eq("exercise_name", exerciseName);
@@ -470,14 +502,24 @@ export default function AsvandCalisthenicsPage() {
               target_reps: masteryReps,
               sessions_hit: value >= masteryReps ? 3 : 1,
               mastery_percent: calculatedMastery,
-              x3_completed: x3Completed
+              x3_completed: x3Completed,
+              best_performance_date: todayStr
             });
           if (error) throw error;
         }
       }
 
       // ALWAYS log to training history (pr_logs)
-      const todayStr = new Date().toISOString().split("T")[0];
+      const details = [];
+      details.push(`${sets} set${sets > 1 ? "s" : ""}`);
+      if (weight !== null && !isNaN(weight)) {
+        details.push(`@ ${weight} kg`);
+      }
+      const prefix = details.join(" ");
+      const finalNotes = notes 
+        ? `[${prefix}] ${notes}` 
+        : `Logged performance: ${prefix}.`;
+
       await supabase
         .from("pr_logs")
         .insert({
@@ -486,7 +528,7 @@ export default function AsvandCalisthenicsPage() {
           value: value,
           unit: catalogItem.mastery_req.toLowerCase().includes("s") || catalogItem.mastery_req.toLowerCase().includes("sec") ? "sec" : "reps",
           date: todayStr,
-          notes: isX3Click ? `Logged via inline performance tracker (3 sets completed).` : `Logged via inline performance tracker.`
+          notes: finalNotes
         });
 
       // Reload
@@ -635,17 +677,30 @@ export default function AsvandCalisthenicsPage() {
                 const isDuration = ex.mastery_req.toLowerCase().includes("s") || ex.mastery_req.toLowerCase().includes("sec");
                 const unit = isDuration ? "sec" : "reps";
 
+                // Exercise type for logging interface
+                const getExerciseType = (item: CatalogItem) => {
+                  const req = item.mastery_req.toLowerCase();
+                  if (req.includes("sec") || req.includes("hold") || req.endsWith("s")) {
+                    return "duration";
+                  }
+                  if (req.includes("kg") || req.includes("weighted")) {
+                    return "weighted_reps";
+                  }
+                  return "reps";
+                };
+                const exerciseType = getExerciseType(ex);
+
                 return (
                   <div
                     key={exName}
                     className={`p-5 rounded-2xl border transition-all ${
                       isUnlocked 
                         ? "bg-surface1 border-border/40 text-white" 
-                        : "bg-[#101018]/30 border-border/10 text-secondary/30 opacity-40"
+                        : "bg-[#101018]/30 border-border/10 text-secondary/30 opacity-60"
                     }`}
                   >
-                    <div className="flex flex-col gap-3.5">
-                      {/* Title */}
+                    <div className="flex flex-col gap-3">
+                      {/* Title & Status */}
                       <div className="flex items-center justify-between">
                         <h3 className="font-extrabold text-base tracking-wide">{exName}</h3>
                         {(() => {
@@ -662,167 +717,298 @@ export default function AsvandCalisthenicsPage() {
 
                       <div className="divider opacity-30 my-0.5" />
 
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Master Requirement */}
-                        <div>
-                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Master Requirement</span>
-                          <span className={`text-xs font-bold ${isUnlocked ? "text-white" : "text-secondary/40"}`}>
-                            {exName === "LEG MASTER" ? "Complete all Leg Mastery paths" : ex.mastery_req}
-                          </span>
-                        </div>
-
-                        {/* Best Performance */}
-                        <div>
-                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Best Performance</span>
-                          <span className={`text-xs font-bold ${isUnlocked ? "text-accent" : "text-secondary/40"}`}>
-                            {currentPrVal !== null 
-                              ? (skillProgress?.x3_completed ? `3 × ${currentPrVal} ${unit}` : `1 × ${currentPrVal} ${unit}`) 
-                              : "—"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Unlock Graph / Successors */}
-                      {exName !== "LEG MASTER" ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          {/* Unlocks */}
-                          <div>
-                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Unlocks</span>
-                            {(() => {
-                              const unlocksList = getUnlocksForExercise(exName);
-                              const directUnlocks = unlocksList.filter(item => getPrerequisites(item).length === 1);
-                              if (directUnlocks.length === 0) {
-                                return <span className="text-xs text-secondary/40 font-semibold italic">None</span>;
-                              }
-                              return (
-                                <div className="mt-0.5 flex flex-col gap-0.5">
-                                  {directUnlocks.map(unlockEx => {
-                                    const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
-                                    return (
-                                      <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
-                                        <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
-                                          {isUnlockExUnlocked ? "✓" : "•"}
-                                        </span>
-                                        <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
-                                          {unlockEx.name}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })()}
-                          </div>
-
-                          {/* Contributes To / Required For */}
-                          <div>
-                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Required For</span>
-                            {(() => {
-                              const unlocksList = getUnlocksForExercise(exName);
-                              const contributesTo = unlocksList.filter(item => getPrerequisites(item).length > 1);
-                              if (contributesTo.length === 0) {
-                                return <span className="text-xs text-secondary/40 font-semibold italic">None</span>;
-                              }
-                              return (
-                                <div className="mt-0.5 flex flex-col gap-0.5">
-                                  {contributesTo.map(unlockEx => {
-                                    const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
-                                    return (
-                                      <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
-                                        <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
-                                          {isUnlockExUnlocked ? "✓" : "•"}
-                                        </span>
-                                        <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
-                                          {unlockEx.name}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })()}
-                          </div>
+                      {!isUnlocked ? (
+                        /* Locked Exercise Layout: Show Prerequisite Checklist */
+                        <div className="mt-1">
+                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-1.5">Requires Unlocks</span>
+                          {(() => {
+                            const prereqRules = getPrerequisites(ex);
+                            const list = Array.isArray(prereqRules) ? prereqRules : prereqRules.exercises;
+                            const isOrRelation = !Array.isArray(prereqRules) && prereqRules.type === "or";
+                            
+                            return (
+                              <div className="flex flex-col gap-1">
+                                {isOrRelation && (
+                                  <span className="text-[10px] text-secondary/70 italic block mb-1">
+                                    Complete any one of the following:
+                                  </span>
+                                )}
+                                {list.map(prereqName => {
+                                  const mastered = isExerciseMastered(prereqName);
+                                  return (
+                                    <div key={prereqName} className="flex items-center gap-2 text-xs">
+                                      <span>{mastered ? "✅" : "⬜"}</span>
+                                      <span className={mastered ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
+                                        {prereqName}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
                         </div>
                       ) : (
-                        /* LEG MASTER Special Display */
-                        <div className="flex flex-col gap-2.5">
-                          <div>
-                            <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Prerequisite Branches</span>
-                            <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
-                              {Object.keys(LEG_PATHS).map(pathKey => {
-                                const complete = isPathComplete(pathKey as keyof typeof LEG_PATHS);
-                                return (
-                                  <div key={pathKey} className="flex items-center gap-1 text-xs">
-                                    <span className={complete ? "text-success font-bold" : "text-secondary/30"}>
-                                      {complete ? "✓" : "•"}
-                                    </span>
-                                    <span className={complete ? "text-white font-medium" : "text-secondary/40"}>
-                                      {pathKey}
-                                    </span>
-                                  </div>
-                                );
-                              })}
+                        /* Unlocked Exercise Layout */
+                        <>
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Master Requirement */}
+                            <div>
+                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Master Requirement</span>
+                              <span className="text-xs font-bold text-white">
+                                {exName === "LEG MASTER" ? "Complete all Leg Mastery paths" : ex.mastery_req}
+                              </span>
                             </div>
-                          </div>
-                          
-                          <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
-                            <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
-                            <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
-                              <span>🏆 Leg Master Title</span>
-                              <span>⚡ +500 XP</span>
-                              <span>📚 Book Complete</span>
-                              <span>📜 Certificate Unlocked</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
 
-                      {/* Log Performance Input Container */}
-                      <div className="mt-1 flex items-center justify-end gap-2">
-                        <input
-                          type="number"
-                          disabled={!isUnlocked}
-                          placeholder="Log reps / sec"
-                          defaultValue=""
-                          id={`input-pr-${exName}`}
-                          className="w-28 bg-[#181825] py-2 px-2.5 border border-border/30 rounded-xl text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent disabled:opacity-50"
-                        />
-                        <div className="flex gap-1">
-                          <button
-                            disabled={!isUnlocked}
-                            onClick={async () => {
-                              const inputEl = document.getElementById(`input-pr-${exName}`) as HTMLInputElement;
-                              if (inputEl) {
-                                const val = parseInt(inputEl.value);
-                                if (!isNaN(val) && val >= 0) {
-                                  await handleSaveInlinePr(exName, val, false);
-                                  inputEl.value = "";
-                                }
-                              }
-                            }}
-                            className="px-3.5 py-2 text-xs font-bold text-[#000] bg-accent rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-                          >
-                            Record
-                          </button>
-                          <button
-                            disabled={!isUnlocked}
-                            onClick={async () => {
-                              const inputEl = document.getElementById(`input-pr-${exName}`) as HTMLInputElement;
-                              if (inputEl) {
-                                const val = parseInt(inputEl.value);
-                                if (!isNaN(val) && val >= 0) {
-                                  await handleSaveInlinePr(exName, val, true);
-                                  inputEl.value = "";
-                                }
-                              }
-                            }}
-                            className="px-3.5 py-2 text-xs font-bold text-[#000] bg-success rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
-                            title="Log 3 sets at this value"
-                          >
-                            x3
-                          </button>
-                        </div>
-                      </div>
+                            {/* Best Performance */}
+                            <div>
+                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Best Performance</span>
+                              <span className="text-xs font-bold text-accent block">
+                                {currentPrVal !== null 
+                                  ? (skillProgress?.x3_completed ? `3 × ${currentPrVal} ${unit}` : `1 × ${currentPrVal} ${unit}`) 
+                                  : "—"}
+                              </span>
+                              {skillProgress?.best_performance_date && (
+                                <span className="text-[9px] text-secondary/50 block font-mono mt-0.5">
+                                  {(() => {
+                                    try {
+                                      return new Date(skillProgress.best_performance_date).toLocaleDateString("en-US", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric"
+                                      });
+                                    } catch (e) {
+                                      return "";
+                                    }
+                                  })()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Successors Display */}
+                          {exName !== "LEG MASTER" ? (
+                            (() => {
+                              const unlocksList = getUnlocksForExercise(exName);
+                              const directUnlocks = unlocksList.filter(item => {
+                                const prereqs = getPrerequisites(item);
+                                return Array.isArray(prereqs) ? prereqs.length === 1 : prereqs.exercises.length === 1;
+                              });
+                              const contributesTo = unlocksList.filter(item => {
+                                const prereqs = getPrerequisites(item);
+                                return Array.isArray(prereqs) ? prereqs.length > 1 : prereqs.exercises.length > 1;
+                              });
+
+                              if (directUnlocks.length === 0 && contributesTo.length === 0) return null;
+
+                              return (
+                                <div className="grid grid-cols-2 gap-4">
+                                  {/* Direct Unlocks */}
+                                  {directUnlocks.length > 0 && (
+                                    <div>
+                                      <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Unlocks</span>
+                                      <div className="mt-0.5 flex flex-col gap-0.5">
+                                        {directUnlocks.map(unlockEx => {
+                                          const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
+                                          return (
+                                            <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                              <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
+                                                {isUnlockExUnlocked ? "✓" : "•"}
+                                              </span>
+                                              <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
+                                                {unlockEx.name}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Contributes To */}
+                                  {contributesTo.length > 0 && (
+                                    <div>
+                                      <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Contributes To</span>
+                                      <div className="mt-0.5 flex flex-col gap-0.5">
+                                        {contributesTo.map(unlockEx => {
+                                          const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
+                                          return (
+                                            <div key={unlockEx.name} className="flex items-center gap-1 text-xs">
+                                              <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
+                                                {isUnlockExUnlocked ? "✓" : "•"}
+                                              </span>
+                                              <span className={isUnlockExUnlocked ? "text-white font-medium" : "text-secondary/40"}>
+                                                {unlockEx.name}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            /* LEG MASTER Special Display */
+                            <div className="flex flex-col gap-2.5">
+                              <div>
+                                <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Prerequisite Branches</span>
+                                <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                                  {Object.keys(LEG_PATHS).map(pathKey => {
+                                    const complete = isPathComplete(pathKey as keyof typeof LEG_PATHS);
+                                    return (
+                                      <div key={pathKey} className="flex items-center gap-1 text-xs">
+                                        <span className={complete ? "text-success font-bold" : "text-secondary/30"}>
+                                          {complete ? "✓" : "•"}
+                                        </span>
+                                        <span className={complete ? "text-white font-medium" : "text-secondary/40"}>
+                                          {pathKey}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              
+                              <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
+                                <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
+                                <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
+                                  <span>🏆 Leg Master Title</span>
+                                  <span>⚡ +500 XP</span>
+                                  <span>📚 Book Complete</span>
+                                  <span>📜 Certificate Unlocked</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Log Training Input Container */}
+                          <div className="mt-3 bg-[#13131c] p-3.5 rounded-xl border border-border/20 flex flex-col gap-2.5">
+                            <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Log Training</span>
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                              {/* Sets Input */}
+                              <div>
+                                <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Sets</label>
+                                <input
+                                  type="number"
+                                  placeholder="Sets"
+                                  defaultValue="3"
+                                  id={`input-sets-${exName}`}
+                                  className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                />
+                              </div>
+
+                              {/* Primary Input (Reps or Seconds) */}
+                              {exerciseType === "duration" ? (
+                                <div>
+                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Seconds</label>
+                                  <input
+                                    type="number"
+                                    placeholder="Sec"
+                                    defaultValue=""
+                                    id={`input-value-${exName}`}
+                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                  />
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Reps</label>
+                                  <input
+                                    type="number"
+                                    placeholder="Reps"
+                                    defaultValue=""
+                                    id={`input-value-${exName}`}
+                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                  />
+                                </div>
+                              )}
+
+                              {/* Secondary Input (Weight) */}
+                              {exerciseType === "weighted_reps" && (
+                                <div>
+                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Weight (kg)</label>
+                                  <input
+                                    type="number"
+                                    placeholder="Weight"
+                                    defaultValue=""
+                                    id={`input-weight-${exName}`}
+                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                  />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Notes Input */}
+                            <div>
+                              <input
+                                type="text"
+                                placeholder="Add training notes (optional)"
+                                defaultValue=""
+                                id={`input-notes-${exName}`}
+                                className="w-full bg-[#181825] py-1.5 px-2.5 border border-border/30 rounded-lg text-xs text-white focus:outline-none focus:border-accent"
+                              />
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-end gap-1.5 mt-0.5">
+                              <button
+                                onClick={async () => {
+                                  const inputValEl = document.getElementById(`input-value-${exName}`) as HTMLInputElement;
+                                  const inputSetsEl = document.getElementById(`input-sets-${exName}`) as HTMLInputElement;
+                                  const inputWeightEl = document.getElementById(`input-weight-${exName}`) as HTMLInputElement;
+                                  const inputNotesEl = document.getElementById(`input-notes-${exName}`) as HTMLInputElement;
+                                  
+                                  if (inputValEl) {
+                                    const val = parseInt(inputValEl.value);
+                                    if (!isNaN(val) && val >= 0) {
+                                      const sets = parseInt(inputSetsEl?.value) || 1;
+                                      const weight = inputWeightEl ? parseFloat(inputWeightEl.value) : null;
+                                      const userNotes = inputNotesEl?.value || "";
+                                      
+                                      await handleSaveInlinePr(exName, val, sets >= 3, sets, weight, userNotes);
+                                      
+                                      inputValEl.value = "";
+                                      if (inputNotesEl) inputNotesEl.value = "";
+                                      if (inputWeightEl) inputWeightEl.value = "";
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-1.5 text-xs font-bold text-[#000] bg-accent rounded-lg hover:filter hover:brightness-110 active:scale-95 transition-all"
+                              >
+                                Record
+                              </button>
+                              
+                              <button
+                                onClick={async () => {
+                                  const inputValEl = document.getElementById(`input-value-${exName}`) as HTMLInputElement;
+                                  const inputNotesEl = document.getElementById(`input-notes-${exName}`) as HTMLInputElement;
+                                  const inputWeightEl = document.getElementById(`input-weight-${exName}`) as HTMLInputElement;
+                                  
+                                  if (inputValEl) {
+                                    const val = parseInt(inputValEl.value);
+                                    if (!isNaN(val) && val >= 0) {
+                                      const weight = inputWeightEl ? parseFloat(inputWeightEl.value) : null;
+                                      const userNotes = inputNotesEl?.value || "";
+                                      
+                                      await handleSaveInlinePr(exName, val, true, 3, weight, userNotes);
+                                      
+                                      inputValEl.value = "";
+                                      if (inputNotesEl) inputNotesEl.value = "";
+                                      if (inputWeightEl) inputWeightEl.value = "";
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-1.5 text-xs font-bold text-[#000] bg-success rounded-lg hover:filter hover:brightness-110 active:scale-95 transition-all"
+                                title="Log 3 sets at this value"
+                              >
+                                x3
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
