@@ -155,7 +155,8 @@ LANGUAGE sql
 SECURITY DEFINER
 SET search_path = pg_catalog
 AS $$
-  SELECT pg_database_size(current_database());
+  SELECT SUM(pg_database_size(datname))::BIGINT
+  FROM pg_database;
 $$;
 
 -- Revoke default execution privileges from PUBLIC (all roles)
