@@ -363,3 +363,37 @@ export function getCalisthenicsLevelInfo(xp: number) {
 
 export const skillsLocked = (baseFourAvg: number) => baseFourAvg < 60;
 export const eliteLocked = (baseFourAvg: number, skillsAvg: number) => baseFourAvg < 100 || skillsAvg < 100;
+
+export interface CalisthenicsProgress {
+  exercise_name: string;
+  path: string;
+  mastery_percent: number;
+  learned: boolean;
+  correct_form?: boolean;
+  reps: number;
+  target_reps?: number;
+  sessions_hit?: number;
+  x3_completed?: boolean;
+  best_performance_date?: string | null;
+}
+
+export function isExerciseMastered(exName: string, skills: CalisthenicsProgress[]): boolean {
+  const catalogItem = GUILD_CATALOG.find(item => item.name === exName);
+  if (!catalogItem) return false;
+  const skill = skills.find(s => s.exercise_name === exName);
+  return skill ? (!!skill.x3_completed && skill.reps >= catalogItem.target_reps) : false;
+}
+
+export function calculateTotalXp(skills: { exercise_name: string; mastery_percent: number }[]): number {
+  let sum = 0;
+  skills.forEach(s => {
+    let difficulty = 3;
+    if (s.exercise_name.includes("Air Squat") || s.exercise_name.includes("Wall Push-up")) difficulty = 1;
+    else if (s.exercise_name.includes("Pistol Squat") || s.exercise_name.includes("Handstand Push-up")) difficulty = 8;
+    else if (s.exercise_name.includes("Full Planche") || s.exercise_name.includes("LEG MASTER")) difficulty = 10;
+    
+    const xpVal = getXpForDifficulty(difficulty);
+    sum += Math.round((s.mastery_percent / 100) * xpVal);
+  });
+  return sum;
+}

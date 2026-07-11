@@ -19,22 +19,11 @@ import {
   skillsLocked as isSkillsLockedFunc,
   eliteLocked as isEliteLockedFunc,
   CatalogItem,
-  PrereqRule
+  PrereqRule,
+  isExerciseMastered as isExerciseMasteredCentral,
+  calculateTotalXp,
+  CalisthenicsProgress
 } from "@/lib/calisthenicsConfig";
-
-interface SkillItem {
-  id?: string;
-  exercise_name: string;
-  path: "legs" | "push" | "pull" | "core" | "skills" | "elite";
-  mastery_percent: number;
-  learned: boolean;
-  correct_form: boolean;
-  reps: number;
-  target_reps: number;
-  sessions_hit: number;
-  x3_completed?: boolean;
-  best_performance_date?: string;
-}
 
 export default function AsvandCalisthenicsPage() {
   const router = useRouter();
@@ -42,8 +31,9 @@ export default function AsvandCalisthenicsPage() {
   const [asvandId, setAsvandId] = useState<string | null>(null);
 
   // States
-  const [skills, setSkills] = useState<SkillItem[]>([]);
+  const [skills, setSkills] = useState<CalisthenicsProgress[]>([]);
   const [activeBook, setActiveBook] = useState<"legs" | "push" | "pull" | "core" | "skills" | "elite" | null>(null);
+  const [isLogging, setIsLogging] = useState(false);
 
   const loadData = async (profileId: string) => {
     try {
@@ -106,7 +96,13 @@ export default function AsvandCalisthenicsPage() {
     const focusParam = params.get("focus");
 
     if (bookParam && activeBook !== bookParam) {
-      setActiveBook(bookParam as any);
+      if (bookParam === "skills" && skillsLocked) {
+        // Keep activeBook null if locked
+      } else if (bookParam === "elite" && eliteLocked) {
+        // Keep activeBook null if locked
+      } else {
+        setActiveBook(bookParam as any);
+      }
     }
 
     if (focusParam && activeBook === bookParam) {
@@ -126,27 +122,25 @@ export default function AsvandCalisthenicsPage() {
 
   // Compute total Calisthenics XP accumulated
   const totalCalisthenicsXp = useMemo(() => {
-    let sum = 0;
-    skills.forEach(s => {
-      let difficulty = 3;
-      if (s.exercise_name.includes("Air Squat") || s.exercise_name.includes("Wall Push-up")) difficulty = 1;
-      else if (s.exercise_name.includes("Pistol Squat") || s.exercise_name.includes("Handstand Push-up")) difficulty = 8;
-      else if (s.exercise_name.includes("Full Planche") || s.exercise_name.includes("LEG MASTER")) difficulty = 10;
-      
-      const xpVal = getXpForDifficulty(difficulty);
-      sum += Math.round((s.mastery_percent / 100) * xpVal);
-    });
-    return sum;
+    return calculateTotalXp(skills);
   }, [skills]);
 
   const levelInfo = getCalisthenicsLevelInfo(totalCalisthenicsXp);
 
   // Path average calculations
+  // Path average calculations
   const getPathAvg = (pathName: string) => {
-    const pathSkills = skills.filter(s => s.path === pathName);
-    return pathSkills.length > 0
-      ? Math.round(pathSkills.reduce((sum, item) => sum + item.mastery_percent, 0) / pathSkills.length)
-      : 0;
+    const bookCatalog = GUILD_CATALOG.filter(x => x.path === pathName);
+    const totalCount = bookCatalog.length;
+    if (totalCount === 0) return 0;
+    
+    let totalMasterySum = 0;
+    bookCatalog.forEach(item => {
+      const match = skills.find(s => s.exercise_name === item.name);
+      totalMasterySum += match ? match.mastery_percent : 0;
+    });
+    
+    return Math.round(totalMasterySum / totalCount);
   };
 
   const legsAvg = getPathAvg("legs");
@@ -160,6 +154,9 @@ export default function AsvandCalisthenicsPage() {
 
   const eliteLocked = isEliteLockedFunc(baseFourAvg, skillsAvg);
   const eliteAvg = getPathAvg("elite");
+
+  // Local wrapper around the centralized mastery checker
+  const isExerciseMastered = (exName: string) => isExerciseMasteredCentral(exName, skills);
 
   // Helper to check if a prerequisite rule is met
   const isRuleMet = (rule: string[] | PrereqRule | undefined): boolean => {
@@ -185,14 +182,6 @@ export default function AsvandCalisthenicsPage() {
     const idx = pathList.findIndex(x => x.name === item.name);
     if (idx <= 0) return [];
     return [pathList[idx - 1].name];
-  };
-
-  // Helper to check if an exercise is mastered (x3 completed and reps/seconds >= target reps/seconds)
-  const isExerciseMastered = (exName: string) => {
-    const catalogItem = GUILD_CATALOG.find(item => item.name === exName);
-    if (!catalogItem) return false;
-    const skill = skills.find(s => s.exercise_name === exName);
-    return skill ? (skill.x3_completed && skill.reps >= catalogItem.target_reps) : false;
   };
 
   const isExerciseUnlocked = (exName: string, path?: string) => {
@@ -264,8 +253,9 @@ export default function AsvandCalisthenicsPage() {
     weight: number | null = null,
     notes: string = ""
   ) => {
-    if (!asvandId) return;
+    if (!asvandId || isLogging) return;
 
+    setIsLogging(true);
     try {
       const currentSkill = skills.find(s => s.exercise_name === exerciseName);
       const catalogItem = GUILD_CATALOG.find(item => item.name === exerciseName);
@@ -360,6 +350,8 @@ export default function AsvandCalisthenicsPage() {
       await loadData(asvandId);
     } catch (err) {
       console.error("Error logging performance:", err);
+    } finally {
+      setIsLogging(false);
     }
   };
 
