@@ -75,8 +75,9 @@ export default function AsvandMeasurementsPage() {
 
       if (error) throw error;
       setRecords(data || []);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error loading measurements:", err);
+      alert(err.message || "Failed to load measurements from the database.");
     } finally {
       setLoading(false);
     }
@@ -124,7 +125,7 @@ export default function AsvandMeasurementsPage() {
       mergedMap[log.date] = { ...mergedMap[log.date], ...log };
     });
     
-    // 2. Override and merge Supabase records (wrist, waist, arm_relaxed, forearm, chest, hip, weight)
+    // 2. Override and merge Supabase records (all 12 fields)
     records.forEach(r => {
       mergedMap[r.date] = {
         ...mergedMap[r.date],
@@ -132,10 +133,15 @@ export default function AsvandMeasurementsPage() {
         date: r.date,
         weight_kg: r.weight_kg,
         waist_cm: r.waist_cm,
-        arm_cm: r.arm_cm,
-        forearm_cm: r.forearm_cm,
         chest_cm: r.chest_cm,
+        shoulders_cm: r.shoulders_cm,
+        arm_cm: r.arm_cm,
+        arm_flexed_cm: r.arm_flexed_cm,
+        forearm_cm: r.forearm_cm,
+        thigh_cm: r.thigh_cm,
+        calf_cm: r.calf_cm,
         hip_cm: r.hip_cm,
+        neck_cm: r.neck_cm,
         wrist_cm: r.wrist_cm
       };
     });
@@ -177,29 +183,52 @@ export default function AsvandMeasurementsPage() {
 
   const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!asvandId) return;
+    if (!asvandId || submitting) return;
     setSubmitting(true);
 
     try {
+      // 1. Strict numeric validations using Number() pattern
+      for (const cfg of MEASUREMENT_CONFIGS) {
+        const currentRaw = formCurrents[cfg.key]?.trim() || "";
+        if (currentRaw !== "") {
+          const val = Number(currentRaw);
+          if (isNaN(val) || !Number.isFinite(val) || val <= 0 || val >= 1000) {
+            alert(`Please enter a valid positive number under 1000 for today's ${cfg.label}.`);
+            setSubmitting(false);
+            return;
+          }
+        }
+
+        const goalRaw = formGoals[cfg.key]?.trim() || "";
+        if (goalRaw !== "") {
+          const val = Number(goalRaw);
+          if (isNaN(val) || !Number.isFinite(val) || val <= 0 || val >= 1000) {
+            alert(`Please enter a valid positive number under 1000 for target goal ${cfg.label}.`);
+            setSubmitting(false);
+            return;
+          }
+        }
+      }
+
       const todayStr = new Date().toISOString().split("T")[0];
 
-      // 1. Save goals to local storage
+      // 2. Save goals to local storage
       const newGoals: Record<string, number> = {};
       MEASUREMENT_CONFIGS.forEach(cfg => {
-        const val = parseFloat(formGoals[cfg.key]);
-        if (!isNaN(val) && val > 0) {
-          newGoals[cfg.key] = val;
+        const raw = formGoals[cfg.key]?.trim() || "";
+        if (raw !== "") {
+          newGoals[cfg.key] = Number(raw);
         }
       });
       setGoals(newGoals);
       localStorage.setItem("calisthenics_measurement_goals", JSON.stringify(newGoals));
 
-      // 2. Save all measurements locally (unified history backup)
+      // 3. Save all measurements locally (unified history backup)
       const todayLocalData: any = { date: todayStr };
       MEASUREMENT_CONFIGS.forEach(cfg => {
-        const val = parseFloat(formCurrents[cfg.key]);
-        if (!isNaN(val) && val > 0) {
-          todayLocalData[cfg.key] = val;
+        const raw = formCurrents[cfg.key]?.trim() || "";
+        if (raw !== "") {
+          todayLocalData[cfg.key] = Number(raw);
         } else {
           // Carry over from previous records if exist
           const match = localLogs.find(l => l.date === todayStr);
@@ -215,7 +244,7 @@ export default function AsvandMeasurementsPage() {
       setLocalLogs(updatedLocalLogs);
       localStorage.setItem("calisthenics_local_measurements", JSON.stringify(updatedLocalLogs));
 
-      // 3. Save Supabase-supported fields (wrist, waist, arm_relaxed, forearm, chest, hip, weight)
+      // 4. Save all 12 Supabase fields
       const { data: existing } = await supabase
         .from("measurements")
         .select("*")
@@ -223,16 +252,29 @@ export default function AsvandMeasurementsPage() {
         .eq("date", todayStr)
         .maybeSingle();
 
+      const getFieldVal = (key: keyof Omit<MeasurementRecord, "id" | "date">) => {
+        const raw = formCurrents[key]?.trim() || "";
+        if (raw !== "") {
+          return Number(raw);
+        }
+        return existing ? existing[key] : null;
+      };
+
       const dbFields: any = {
         profile_id: asvandId,
         date: todayStr,
-        weight_kg: !isNaN(parseFloat(formCurrents.weight_kg)) ? parseFloat(formCurrents.weight_kg) : (existing ? existing.weight_kg : null),
-        waist_cm: !isNaN(parseFloat(formCurrents.waist_cm)) ? parseFloat(formCurrents.waist_cm) : (existing ? existing.waist_cm : null),
-        chest_cm: !isNaN(parseFloat(formCurrents.chest_cm)) ? parseFloat(formCurrents.chest_cm) : (existing ? existing.chest_cm : null),
-        arm_cm: !isNaN(parseFloat(formCurrents.arm_cm)) ? parseFloat(formCurrents.arm_cm) : (existing ? existing.arm_cm : null),
-        forearm_cm: !isNaN(parseFloat(formCurrents.forearm_cm)) ? parseFloat(formCurrents.forearm_cm) : (existing ? existing.forearm_cm : null),
-        hip_cm: !isNaN(parseFloat(formCurrents.hip_cm)) ? parseFloat(formCurrents.hip_cm) : (existing ? existing.hip_cm : null),
-        wrist_cm: !isNaN(parseFloat(formCurrents.wrist_cm)) ? parseFloat(formCurrents.wrist_cm) : (existing ? existing.wrist_cm : null),
+        weight_kg: getFieldVal("weight_kg"),
+        waist_cm: getFieldVal("waist_cm"),
+        chest_cm: getFieldVal("chest_cm"),
+        shoulders_cm: getFieldVal("shoulders_cm"),
+        arm_cm: getFieldVal("arm_cm"),
+        arm_flexed_cm: getFieldVal("arm_flexed_cm"),
+        forearm_cm: getFieldVal("forearm_cm"),
+        thigh_cm: getFieldVal("thigh_cm"),
+        calf_cm: getFieldVal("calf_cm"),
+        hip_cm: getFieldVal("hip_cm"),
+        neck_cm: getFieldVal("neck_cm"),
+        wrist_cm: getFieldVal("wrist_cm")
       };
 
       if (existing) {
@@ -254,8 +296,9 @@ export default function AsvandMeasurementsPage() {
       // Trigger Toast Success Notification
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving measurements:", err);
+      alert(err.message || "Failed to save measurements. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
