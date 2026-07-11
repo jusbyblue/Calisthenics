@@ -27,6 +27,8 @@ interface PrLogItem {
   notes?: string;
 }
 
+const DB_QUOTA_MB = 500;
+
 export default function Dashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -36,9 +38,14 @@ export default function Dashboard() {
   const [activeTargets, setActiveTargets] = useState<{ exercise: string; targetValue: number; currentValue: number; unit: string; completed: boolean }[]>([]);
   const [weightTarget, setWeightTarget] = useState<{ current: number; target: number; unit: string } | null>(null);
 
+  // Database Storage States
+  const [dbSizeMb, setDbSizeMb] = useState<number | null>(null);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [dbError, setDbError] = useState(false);
+
   const loadData = async (profileId: string) => {
     try {
-      const [progressRes, prRes, targetsRes, weightRes] = await Promise.all([
+      const [progressRes, prRes, targetsRes, weightRes, dbSizeRes] = await Promise.all([
         supabase
           .from("calisthenics_progress")
           .select("*")
@@ -57,7 +64,8 @@ export default function Dashboard() {
           .select("*")
           .eq("profile_id", profileId)
           .order("date", { ascending: false })
-          .limit(1)
+          .limit(1),
+        supabase.rpc("get_db_size")
       ]);
 
       if (progressRes.data) {
@@ -118,10 +126,23 @@ export default function Dashboard() {
         });
         setActiveTargets(mapped);
       }
+
+      // Parse Database Size Result
+      if (dbSizeRes.error) {
+        console.error("Error loading database size:", dbSizeRes.error);
+        setDbError(true);
+      } else if (dbSizeRes.data !== undefined) {
+        const bytes = Number(dbSizeRes.data);
+        const mb = bytes / (1024 * 1024);
+        setDbSizeMb(mb);
+        setDbError(false);
+      }
     } catch (err) {
       console.error("Error loading Dashboard data:", err);
+      setDbError(true);
     } finally {
       setLoading(false);
+      setDbLoading(false);
     }
   };
 
@@ -636,6 +657,44 @@ export default function Dashboard() {
             <span className="text-[8px] text-secondary font-bold uppercase mt-1">Measures</span>
           </button>
         </div>
+
+        {/* Database Storage Usage Card */}
+        <Card className="flex flex-col gap-2 bg-[#101018]/90 border border-border/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[#4A9EFF]/5 rounded-full blur-2xl pointer-events-none" />
+          <CardLabel>Database Storage</CardLabel>
+          {dbLoading ? (
+            <div className="flex flex-col gap-1.5 py-1 animate-pulse">
+              <div className="flex justify-between text-[10px] text-secondary">
+                <span>Retrieving usage...</span>
+                <span>-- MB / -- MB</span>
+              </div>
+              <ProgressBar value={0} color="var(--accent)" height={5} />
+            </div>
+          ) : dbError || dbSizeMb === null ? (
+            <div className="py-1 text-[11px] text-secondary/70 italic flex items-center gap-1.5">
+              <span>⚠️</span>
+              <span>Size metrics temporarily unavailable</span>
+            </div>
+          ) : (
+            (() => {
+              const usagePercent = Math.min(100, Math.max(0, (dbSizeMb / DB_QUOTA_MB) * 100));
+              const progressColor = usagePercent > 80 ? "#FF4A4A" : "var(--accent)";
+              return (
+                <div className="flex flex-col gap-2 py-0.5">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-[10px] font-bold text-white tracking-wide uppercase">
+                      {usagePercent.toFixed(2)}% Used
+                    </span>
+                    <span className="text-[10px] font-mono font-bold text-secondary">
+                      {dbSizeMb.toFixed(2)} MB <span className="text-secondary/50">/</span> {DB_QUOTA_MB} MB
+                    </span>
+                  </div>
+                  <ProgressBar value={usagePercent} color={progressColor} height={5} />
+                </div>
+              );
+            })()
+          )}
+        </Card>
 
         {/* 1. Mastery Paths */}
         <Card className="flex flex-col gap-3">

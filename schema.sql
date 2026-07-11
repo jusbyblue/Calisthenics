@@ -148,3 +148,19 @@ INSERT INTO profiles (id, role, name)
 VALUES ('7a950f24-2c63-47bf-8fbd-197e88ef2f7b', 'asvand', 'Asvand')
 ON CONFLICT (id) DO NOTHING;
 
+-- 9. Hardened get_db_size Function (RPC)
+CREATE OR REPLACE FUNCTION public.get_db_size()
+RETURNS BIGINT
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog
+AS $$
+  SELECT pg_database_size(current_database());
+$$;
+
+-- Revoke default execution privileges from PUBLIC (all roles)
+REVOKE EXECUTE ON FUNCTION public.get_db_size() FROM PUBLIC;
+
+-- Grant execution privilege exclusively to the anon client role
+GRANT EXECUTE ON FUNCTION public.get_db_size() TO anon;
+
