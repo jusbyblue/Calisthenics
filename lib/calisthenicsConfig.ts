@@ -397,3 +397,63 @@ export function calculateTotalXp(skills: { exercise_name: string; mastery_percen
   });
   return sum;
 }
+
+export function getExerciseUnit(masteryReq: string): "sec" | "m" | "reps" {
+  const req = masteryReq.toLowerCase();
+  if (req.includes("sec") || req.includes("hold") || req.endsWith("s")) {
+    return "sec";
+  }
+  if (req.endsWith("m") || req.includes("m ")) {
+    return "m";
+  }
+  return "reps";
+}
+
+export const CALISTHENICS_PR_MAP: Record<string, string> = {
+  "Standard Push-up": "Push-up",
+  "Diamond Push-up": "Diamond Push-up",
+  "Wide Push-up": "Wide Push-up",
+  "Archer Push-up": "Archer Push-up",
+  "Pseudo Planche Push-up": "Pseudo Planche Push-up",
+  "Standard Dips": "Dips",
+  "Standard Pull-up": "Pull-up",
+  "Chin-up": "Chin-up",
+  "Neutral Grip Pull-up": "Neutral Grip Pull-up",
+  "Wide Grip Pull-up": "Wide Pull-up",
+  "Commando Pull-up": "Commando Pull-up",
+  "Australian Row": "Australian Row",
+  "Inverted Row": "Inverted Row",
+  "Air Squat": "Air Squat",
+  "Jump Squat": "Jump Squat",
+  "Bulgarian Split Squat": "Bulgarian Split Squat",
+  "Walking Lunge": "Walking Lunge",
+  "Cossack Squat": "Cossack Squat",
+  "Pistol Squat": "Pistol Squat",
+  "Plank": "Plank",
+  "Side Plank": "Side Plank",
+  "Hollow Body Hold": "Hollow Hold",
+  "Arch Hold": "Arch Hold",
+  "L-Sit (Floor)": "L-Sit",
+  "V-Sit": "V-Sit",
+  "Dead Hang": "Dead Hang",
+  "Wall Handstand Hold": "Wall Handstand Hold",
+  "Crow Pose Hold": "Crow Hold",
+  "Weighted Dips": "Weighted Dips",
+  "Reverse Lunge": "Reverse Lunge",
+  "Split Squat": "Split Squat",
+  "Sumo Squat": "Sumo Squat",
+  "Nordic Curl": "Nordic Curl",
+  "Glute Bridge": "Glute Bridge",
+  "Dragon Flag": "Dragon Flag",
+  "Ab Wheel Rollout (Feet)": "Ab Wheel Rollout",
+  "Plank Walkout": "Plank Walkout",
+  "Bird Dog": "Bird Dog",
+  "Knee Raise (Hanging)": "Hanging Knee Raise",
+  "Leg Raise (Hanging)": "Hanging Leg Raise",
+  "Toes to Bar": "Toes to Bar"
+};
+
+export const PR_CALISTHENICS_MAP: Record<string, string> = Object.entries(CALISTHENICS_PR_MAP).reduce((acc, [cal, pr]) => {
+  acc[pr] = cal;
+  return acc;
+}, {} as Record<string, string>);

@@ -22,7 +22,9 @@ import {
   PrereqRule,
   isExerciseMastered as isExerciseMasteredCentral,
   calculateTotalXp,
-  CalisthenicsProgress
+  CalisthenicsProgress,
+  getExerciseUnit,
+  CALISTHENICS_PR_MAP
 } from "@/lib/calisthenicsConfig";
 
 export default function AsvandCalisthenicsPage() {
@@ -95,7 +97,8 @@ export default function AsvandCalisthenicsPage() {
     const bookParam = params.get("book");
     const focusParam = params.get("focus");
 
-    if (bookParam && activeBook !== bookParam) {
+    const VALID_BOOKS = ["legs", "push", "pull", "core", "skills", "elite"];
+    if (bookParam && VALID_BOOKS.includes(bookParam) && activeBook !== bookParam) {
       if (bookParam === "skills" && skillsLocked) {
         // Keep activeBook null if locked
       } else if (bookParam === "elite" && eliteLocked) {
@@ -257,6 +260,23 @@ export default function AsvandCalisthenicsPage() {
 
     setIsLogging(true);
     try {
+      // Basic safety validations
+      if (!Number.isFinite(value) || value <= 0) {
+        alert("Performance value must be a valid positive number.");
+        setIsLogging(false);
+        return;
+      }
+      if (!Number.isInteger(sets) || sets < 1) {
+        alert("Sets must be a positive integer.");
+        setIsLogging(false);
+        return;
+      }
+      if (weight !== null && (!Number.isFinite(weight) || weight < 0)) {
+        alert("Weight must be a valid non-negative number.");
+        setIsLogging(false);
+        return;
+      }
+
       const currentSkill = skills.find(s => s.exercise_name === exerciseName);
       const catalogItem = GUILD_CATALOG.find(item => item.name === exerciseName);
       if (!catalogItem) return;
@@ -282,12 +302,15 @@ export default function AsvandCalisthenicsPage() {
       const currentPrVal = currentSkill ? currentSkill.reps : 0;
       const todayStr = new Date().toISOString().split("T")[0];
       
-      // Update best performance only if value >= currentPrVal
-      if (value >= currentPrVal) {
-        const learned = value > 0;
-        const correctForm = value >= unlockReps;
-        const calculatedMastery = Math.min(100, Math.round((value / masteryReps) * 100));
-        const x3Completed = isX3Click || sets >= 3;
+      const isNewX3 = (isX3Click || sets >= 3) && !currentSkill?.x3_completed;
+      
+      // Update progress if logging higher reps or completing 3 sets for the first time
+      if (value >= currentPrVal || isNewX3) {
+        const finalReps = Math.max(value, currentPrVal);
+        const learned = true;
+        const correctForm = finalReps >= unlockReps;
+        const calculatedMastery = Math.min(100, Math.round((finalReps / masteryReps) * 100));
+        const x3Completed = !!(currentSkill?.x3_completed || isX3Click || sets >= 3);
 
         if (currentSkill) {
           const { error } = await supabase
@@ -295,8 +318,8 @@ export default function AsvandCalisthenicsPage() {
             .update({
               learned,
               correct_form: correctForm,
-              reps: value,
-              sessions_hit: value >= masteryReps ? 3 : 1,
+              reps: finalReps,
+              sessions_hit: finalReps >= masteryReps ? 3 : 1,
               mastery_percent: calculatedMastery,
               x3_completed: x3Completed,
               best_performance_date: todayStr
@@ -313,9 +336,9 @@ export default function AsvandCalisthenicsPage() {
               path: pathName,
               learned,
               correct_form: correctForm,
-              reps: value,
+              reps: finalReps,
               target_reps: masteryReps,
-              sessions_hit: value >= masteryReps ? 3 : 1,
+              sessions_hit: finalReps >= masteryReps ? 3 : 1,
               mastery_percent: calculatedMastery,
               x3_completed: x3Completed,
               best_performance_date: todayStr
@@ -324,32 +347,37 @@ export default function AsvandCalisthenicsPage() {
         }
       }
 
-      // ALWAYS log to training history (pr_logs)
-      const details = [];
-      details.push(`${sets} set${sets > 1 ? "s" : ""}`);
-      if (weight !== null && !isNaN(weight)) {
-        details.push(`@ ${weight} kg`);
-      }
-      const prefix = details.join(" ");
-      const finalNotes = notes 
-        ? `[${prefix}] ${notes}` 
-        : `Logged performance: ${prefix}.`;
+      // Sync to general PR Database only if the exercise is explicitly mapped
+      const mappedPrExercise = CALISTHENICS_PR_MAP[exerciseName];
+      if (mappedPrExercise) {
+        const details = [];
+        details.push(`${sets} set${sets > 1 ? "s" : ""}`);
+        if (weight !== null && !isNaN(weight)) {
+          details.push(`@ ${weight} kg`);
+        }
+        const prefix = details.join(" ");
+        const finalNotes = notes 
+          ? `[${prefix}] ${notes}` 
+          : `Logged performance: ${prefix}.`;
 
-      await supabase
-        .from("pr_logs")
-        .insert({
-          profile_id: asvandId,
-          exercise: exerciseName,
-          value: value,
-          unit: catalogItem.mastery_req.toLowerCase().includes("s") || catalogItem.mastery_req.toLowerCase().includes("sec") ? "sec" : "reps",
-          date: todayStr,
-          notes: finalNotes
-        });
+        const { error } = await supabase
+          .from("pr_logs")
+          .insert({
+            profile_id: asvandId,
+            exercise: mappedPrExercise,
+            value: value,
+            unit: getExerciseUnit(catalogItem.mastery_req),
+            date: todayStr,
+            notes: finalNotes
+          });
+        if (error) throw error;
+      }
 
       // Reload
       await loadData(asvandId);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error logging performance:", err);
+      alert(err.message || "Failed to save training log to database.");
     } finally {
       setIsLogging(false);
     }
@@ -510,8 +538,7 @@ export default function AsvandCalisthenicsPage() {
                 const skillProgress = skills.find(s => s.exercise_name === exName);
                 const currentPrVal = skillProgress ? skillProgress.reps : null;
 
-                const isDuration = ex.mastery_req.toLowerCase().includes("s") || ex.mastery_req.toLowerCase().includes("sec");
-                const unit = isDuration ? "sec" : "reps";
+                const unit = getExerciseUnit(ex.mastery_req);
 
                 // Exercise type for logging interface
                 const getExerciseType = (item: CatalogItem) => {
@@ -918,6 +945,7 @@ export default function AsvandCalisthenicsPage() {
                             {/* Action Buttons */}
                             <div className="flex justify-end gap-1.5 mt-0.5">
                               <button
+                                disabled={isLogging}
                                 onClick={async () => {
                                   const inputValEl = document.getElementById(`input-value-${exName}`) as HTMLInputElement;
                                   const inputSetsEl = document.getElementById(`input-sets-${exName}`) as HTMLInputElement;
@@ -926,25 +954,39 @@ export default function AsvandCalisthenicsPage() {
                                   
                                   if (inputValEl) {
                                     const val = parseInt(inputValEl.value);
-                                    if (!isNaN(val) && val >= 0) {
-                                      const sets = parseInt(inputSetsEl?.value) || 1;
-                                      const weight = inputWeightEl ? parseFloat(inputWeightEl.value) : null;
-                                      const userNotes = inputNotesEl?.value || "";
-                                      
-                                      await handleSaveInlinePr(exName, val, sets >= 3, sets, weight, userNotes);
-                                      
-                                      inputValEl.value = "";
-                                      if (inputNotesEl) inputNotesEl.value = "";
-                                      if (inputWeightEl) inputWeightEl.value = "";
+                                    if (isNaN(val) || val <= 0) {
+                                      alert("Please enter a valid positive number for the performance value.");
+                                      return;
                                     }
+                                    const sets = parseInt(inputSetsEl?.value) || 1;
+                                    if (isNaN(sets) || sets < 1) {
+                                      alert("Sets must be a positive integer.");
+                                      return;
+                                    }
+                                    const weightVal = inputWeightEl?.value;
+                                    const weight = weightVal ? parseFloat(weightVal) : null;
+                                    if (weight !== null && (isNaN(weight) || weight < 0)) {
+                                      alert("Weight must be a non-negative number.");
+                                      return;
+                                    }
+                                    const userNotes = inputNotesEl?.value || "";
+                                    
+                                    await handleSaveInlinePr(exName, val, sets >= 3, sets, weight, userNotes);
+                                    
+                                    inputValEl.value = "";
+                                    if (inputNotesEl) inputNotesEl.value = "";
+                                    if (inputWeightEl) inputWeightEl.value = "";
                                   }
                                 }}
-                                className="px-4 py-1.5 text-xs font-bold text-[#000] bg-accent rounded-lg hover:filter hover:brightness-110 active:scale-95 transition-all"
+                                className={`px-4 py-1.5 text-xs font-bold text-[#000] bg-accent rounded-lg transition-all ${
+                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:filter hover:brightness-110 active:scale-95 cursor-pointer"
+                                }`}
                               >
-                                Record
+                                {isLogging ? "Logging..." : "Record"}
                               </button>
                               
                               <button
+                                disabled={isLogging}
                                 onClick={async () => {
                                   const inputValEl = document.getElementById(`input-value-${exName}`) as HTMLInputElement;
                                   const inputNotesEl = document.getElementById(`input-notes-${exName}`) as HTMLInputElement;
@@ -952,19 +994,28 @@ export default function AsvandCalisthenicsPage() {
                                   
                                   if (inputValEl) {
                                     const val = parseInt(inputValEl.value);
-                                    if (!isNaN(val) && val >= 0) {
-                                      const weight = inputWeightEl ? parseFloat(inputWeightEl.value) : null;
-                                      const userNotes = inputNotesEl?.value || "";
-                                      
-                                      await handleSaveInlinePr(exName, val, true, 3, weight, userNotes);
-                                      
-                                      inputValEl.value = "";
-                                      if (inputNotesEl) inputNotesEl.value = "";
-                                      if (inputWeightEl) inputWeightEl.value = "";
+                                    if (isNaN(val) || val <= 0) {
+                                      alert("Please enter a valid positive number for the performance value.");
+                                      return;
                                     }
+                                    const weightVal = inputWeightEl?.value;
+                                    const weight = weightVal ? parseFloat(weightVal) : null;
+                                    if (weight !== null && (isNaN(weight) || weight < 0)) {
+                                      alert("Weight must be a non-negative number.");
+                                      return;
+                                    }
+                                    const userNotes = inputNotesEl?.value || "";
+                                    
+                                    await handleSaveInlinePr(exName, val, true, 3, weight, userNotes);
+                                    
+                                    inputValEl.value = "";
+                                    if (inputNotesEl) inputNotesEl.value = "";
+                                    if (inputWeightEl) inputWeightEl.value = "";
                                   }
                                 }}
-                                className="px-4 py-1.5 text-xs font-bold text-[#000] bg-success rounded-lg hover:filter hover:brightness-110 active:scale-95 transition-all"
+                                className={`px-4 py-1.5 text-xs font-bold text-[#000] bg-success rounded-lg transition-all ${
+                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:filter hover:brightness-110 active:scale-95 cursor-pointer"
+                                }`}
                                 title="Log 3 sets at this value"
                               >
                                 x3

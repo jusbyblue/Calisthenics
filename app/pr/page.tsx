@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
 import { Card, CardLabel } from "@/components/ui/Card";
+import { PR_CALISTHENICS_MAP, GUILD_CATALOG } from "@/lib/calisthenicsConfig";
 
 interface PRRecord {
   id: string;
@@ -341,19 +342,93 @@ export default function PRPage() {
 
     setIsSubmitting(true);
     try {
+      const numericVal = parseFloat(formValue);
+      // Basic safety validations
+      if (isNaN(numericVal) || numericVal <= 0) {
+        alert("Please enter a valid positive number for the PR value.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const todayStr = new Date().toISOString().split("T")[0];
       const { error } = await supabase
         .from("pr_logs")
         .insert({
           profile_id: asvandId,
           exercise: formExercise,
-          value: parseFloat(formValue),
+          value: numericVal,
           unit: formUnit,
           date: todayStr,
           notes: formNotes || null
         });
 
       if (error) throw error;
+
+      // PR Database -> Calisthenics Tree Sync:
+      // Synchronize the best performance value (reps/sec/m) only if explicitly mapped, without granting mastery.
+      const mappedCalName = PR_CALISTHENICS_MAP[formExercise];
+      if (mappedCalName) {
+        const catalogItem = GUILD_CATALOG.find(x => x.name === mappedCalName);
+        if (catalogItem) {
+          const pathName = catalogItem.path;
+          const targetReps = catalogItem.target_reps;
+
+          // Fetch existing progress
+          const { data: currentProgress, error: fetchErr } = await supabase
+            .from("calisthenics_progress")
+            .select("*")
+            .eq("profile_id", asvandId)
+            .eq("exercise_name", mappedCalName)
+            .maybeSingle();
+
+          if (fetchErr) throw fetchErr;
+
+          const currentReps = currentProgress ? currentProgress.reps : 0;
+          const integerPrVal = Math.round(numericVal);
+
+          if (integerPrVal > currentReps || !currentProgress) {
+            // Keep x3_completed unchanged (never set to true from PR page; default to false if new record)
+            const x3Completed = currentProgress ? !!currentProgress.x3_completed : false;
+            const calculatedMastery = Math.min(100, Math.round((integerPrVal / targetReps) * 100));
+
+            if (currentProgress) {
+              const { error: updateErr } = await supabase
+                .from("calisthenics_progress")
+                .update({
+                  reps: integerPrVal,
+                  mastery_percent: calculatedMastery,
+                  learned: true,
+                  correct_form: integerPrVal >= targetReps,
+                  best_performance_date: todayStr
+                })
+                .eq("profile_id", asvandId)
+                .eq("exercise_name", mappedCalName);
+              
+              if (updateErr) throw updateErr;
+            } else {
+              // Insert a valid, complete record without orphan fields
+              const { error: insertErr } = await supabase
+                .from("calisthenics_progress")
+                .insert({
+                  profile_id: asvandId,
+                  exercise_name: mappedCalName,
+                  path: pathName,
+                  learned: true,
+                  correct_form: integerPrVal >= targetReps,
+                  reps: integerPrVal,
+                  target_reps: targetReps,
+                  sessions_hit: 0,
+                  x3_completed: x3Completed,
+                  mastery_percent: calculatedMastery,
+                  best_performance_date: todayStr
+                });
+              
+              if (insertErr) throw insertErr;
+            }
+          }
+        }
+      }
+
       setFormValue("");
       setFormNotes("");
       setIsEditOpen(false);
