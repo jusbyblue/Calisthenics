@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
 import { Card, CardLabel } from "@/components/ui/Card";
-import { PR_CALISTHENICS_MAP, GUILD_CATALOG } from "@/lib/calisthenicsConfig";
+import { PR_CALISTHENICS_MAP, GUILD_CATALOG, getExerciseUnit } from "@/lib/calisthenicsConfig";
 
 interface PRRecord {
   id: string;
@@ -187,6 +187,18 @@ export default function PRPage() {
     }
   }, [formCategory, availableExercises]);
 
+  // Automatically select the correct unit for mapped exercises to prevent drift
+  useEffect(() => {
+    if (!formExercise) return;
+    const mappedCalName = PR_CALISTHENICS_MAP[formExercise];
+    if (mappedCalName) {
+      const catalogItem = GUILD_CATALOG.find(x => x.name === mappedCalName);
+      if (catalogItem) {
+        setFormUnit(getExerciseUnit(catalogItem.mastery_req));
+      }
+    }
+  }, [formExercise]);
+
   const loadData = async (profileId: string) => {
     try {
       // 1. Load PR Logs, Milestones and Weight Logs in parallel
@@ -298,7 +310,7 @@ export default function PRPage() {
     const targetVal = msRecord.value;
     const isCompleted = msRecord.completed || (bestLog && bestLog.value >= targetVal);
     const currentVal = bestLog ? bestLog.value : 0;
-    const percent = Math.min(100, Math.max(0, Math.round((currentVal / targetVal) * 100)));
+    const percent = targetVal > 0 ? Math.min(100, Math.max(0, Math.round((currentVal / targetVal) * 100))) : 0;
 
     return (
       <div className="flex flex-col gap-1 mt-1.5 max-w-[240px]">
@@ -338,7 +350,7 @@ export default function PRPage() {
 
   const handleSavePr = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!asvandId || !formExercise || !formValue) return;
+    if (!asvandId || !formExercise || !formValue || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
@@ -442,11 +454,18 @@ export default function PRPage() {
 
   const handleSaveMilestone = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!asvandId || !formExercise || !formValue) return;
+    if (!asvandId || !formExercise || !formValue || isSubmitting) return;
 
     setIsSubmitting(true);
     try {
       const parsedVal = parseFloat(formValue);
+      // Basic safety validations for targets
+      if (isNaN(parsedVal) || parsedVal <= 0) {
+        alert("Please enter a valid positive number for the target goal.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const existingIdx = milestones.findIndex(m => m.exercise === formExercise);
       let updatedList = [...milestones];
       
