@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
 import { Card, CardLabel } from "@/components/ui/Card";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
+import { getLocalDateString } from "@/lib/dateUtils";
 
 interface WeightLog {
   id: string;
@@ -16,7 +18,7 @@ interface WeightLog {
 export default function AsvandWeightPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [asvandId, setAsvandId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // States
   const [weightLogs, setWeightLogs] = useState<WeightLog[]>([]);
@@ -27,7 +29,7 @@ export default function AsvandWeightPage() {
   const loadWeightData = async (profileId: string) => {
     try {
       const { data, error } = await supabase
-        .from("health_logs")
+        .from("measurements")
         .select("id, date, weight_kg")
         .eq("profile_id", profileId)
         .not("weight_kg", "is", null)
@@ -42,7 +44,7 @@ export default function AsvandWeightPage() {
       }));
 
       setWeightLogs(formatted);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error loading weight logs:", err);
     } finally {
       setLoading(false);
@@ -50,50 +52,59 @@ export default function AsvandWeightPage() {
   };
 
   useEffect(() => {
-    async function init() {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "asvand")
-        .single();
-      
-      if (profile) {
-        setAsvandId(profile.id);
-        loadWeightData(profile.id);
-      } else {
-        setLoading(false);
-      }
-    }
-    init();
+    loadWeightData(ASVAND_PROFILE_ID);
   }, []);
 
   const handleLogWeight = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitStatus(null);
-    if (!asvandId || !weightInput) return;
+    if (submitting || !weightInput) return;
 
-    const val = parseFloat(weightInput);
-    if (isNaN(val) || val <= 0) {
-      setSubmitStatus({ type: "error", msg: "Please enter a valid weight" });
+    const raw = weightInput.trim();
+    if (raw === "") return;
+
+    const val = Number(raw);
+    if (isNaN(val) || !Number.isFinite(val) || val <= 0 || val >= 1000) {
+      setSubmitStatus({ type: "error", msg: "Please enter a valid positive weight under 1000 kg." });
       return;
     }
 
+    setSubmitting(true);
     try {
-      const todayStr = new Date().toISOString().split("T")[0];
-      const { error } = await supabase.rpc("log_health_metric", {
-        p_profile_id: asvandId,
-        p_date: todayStr,
-        p_metric: "weight_kg",
-        p_value: val,
-      });
+      const todayStr = getLocalDateString();
+      const { data: existing, error: selectErr } = await supabase
+        .from("measurements")
+        .select("*")
+        .eq("profile_id", ASVAND_PROFILE_ID)
+        .eq("date", todayStr)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (selectErr) throw selectErr;
+
+      if (existing) {
+        const { error: updateErr } = await supabase
+          .from("measurements")
+          .update({ weight_kg: val })
+          .eq("id", existing.id);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await supabase
+          .from("measurements")
+          .insert({
+            profile_id: ASVAND_PROFILE_ID,
+            date: todayStr,
+            weight_kg: val
+          });
+        if (insertErr) throw insertErr;
+      }
 
       setSubmitStatus({ type: "success", msg: "Weight logged successfully!" });
       setWeightInput("");
-      loadWeightData(asvandId);
+      loadWeightData(ASVAND_PROFILE_ID);
     } catch (err: any) {
       setSubmitStatus({ type: "error", msg: err.message || "Failed to log weight" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -198,7 +209,13 @@ export default function AsvandWeightPage() {
               onChange={(e) => setWeightInput(e.target.value)}
               className="flex-1 bg-[#111111] py-2.5 px-3 border border-[#2A2A2A] rounded-xl text-sm font-semibold text-white focus:outline-none"
             />
-            <button type="submit" className="btn btn-primary py-2.5 text-xs font-bold">Save</button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn btn-primary py-2.5 text-xs font-bold"
+            >
+              {submitting ? "Saving..." : "Save"}
+            </button>
           </form>
           {submitStatus && (
             <p className={`text-xs font-bold mt-2 ${submitStatus.type === "success" ? "text-success" : "text-danger"}`}>

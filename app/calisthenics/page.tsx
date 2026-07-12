@@ -26,6 +26,8 @@ import {
   getExerciseUnit,
   CALISTHENICS_PR_MAP
 } from "@/lib/calisthenicsConfig";
+import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
+import { getLocalDateString } from "@/lib/dateUtils";
 
 export default function AsvandCalisthenicsPage() {
   const router = useRouter();
@@ -69,25 +71,8 @@ export default function AsvandCalisthenicsPage() {
   };
 
   useEffect(() => {
-    async function init() {
-      try {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("role", "asvand")
-          .single();
-
-        if (profileData) {
-          setAsvandId(profileData.id);
-          await loadData(profileData.id);
-        } else {
-          setLoading(false);
-        }
-      } catch (err) {
-        setLoading(false);
-      }
-    }
-    init();
+    setAsvandId(ASVAND_PROFILE_ID);
+    loadData(ASVAND_PROFILE_ID);
   }, []);
 
   // Handle focus query parameter scroll/highlight
@@ -300,7 +285,7 @@ export default function AsvandCalisthenicsPage() {
       }
 
       const currentPrVal = currentSkill ? currentSkill.reps : 0;
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = getLocalDateString();
       
       const isNewX3 = (isX3Click || sets >= 3) && !currentSkill?.x3_completed;
       

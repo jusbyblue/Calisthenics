@@ -17,6 +17,8 @@ import {
   isExerciseMastered as isExerciseMasteredCentral,
   calculateTotalXp
 } from "@/lib/calisthenicsConfig";
+import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
+import { getLocalDateString } from "@/lib/dateUtils";
 
 interface PrLogItem {
   id: string;
@@ -147,24 +149,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    async function init() {
-      try {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("role", "asvand")
-          .single();
-
-        if (profileData) {
-          loadData(profileData.id);
-        } else {
-          setLoading(false);
-        }
-      } catch (err) {
-        setLoading(false);
-      }
-    }
-    init();
+    loadData(ASVAND_PROFILE_ID);
   }, []);
 
   // Compute total Calisthenics XP accumulated

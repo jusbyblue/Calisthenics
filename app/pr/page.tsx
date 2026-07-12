@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
 import { Card, CardLabel } from "@/components/ui/Card";
 import { PR_CALISTHENICS_MAP, GUILD_CATALOG, getExerciseUnit } from "@/lib/calisthenicsConfig";
+import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
+import { getLocalDateString } from "@/lib/dateUtils";
 
 interface PRRecord {
   id: string;
@@ -213,9 +215,10 @@ export default function PRPage() {
           .select("*")
           .eq("profile_id", profileId),
         supabase
-          .from("health_logs")
-          .select("*")
+          .from("measurements")
+          .select("date, weight_kg")
           .eq("profile_id", profileId)
+          .not("weight_kg", "is", null)
           .order("date", { ascending: false })
       ]);
 
@@ -276,25 +279,8 @@ export default function PRPage() {
   };
 
   useEffect(() => {
-    async function init() {
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("role", "asvand")
-          .single();
-        
-        if (profile) {
-          setAsvandId(profile.id);
-          loadData(profile.id);
-        } else {
-          setLoading(false);
-        }
-      } catch (e) {
-        setLoading(false);
-      }
-    }
-    init();
+    setAsvandId(ASVAND_PROFILE_ID);
+    loadData(ASVAND_PROFILE_ID);
   }, []);
 
   const getBwForDate = (dateStr: string) => {
@@ -362,7 +348,7 @@ export default function PRPage() {
         return;
       }
 
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = getLocalDateString();
       const { error } = await supabase
         .from("pr_logs")
         .insert({

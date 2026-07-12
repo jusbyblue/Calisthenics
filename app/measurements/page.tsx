@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
 import { Card } from "@/components/ui/Card";
+import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
+import { getLocalDateString } from "@/lib/dateUtils";
 
 interface MeasurementRecord {
   id?: string;
@@ -99,21 +101,8 @@ export default function AsvandMeasurementsPage() {
       } catch (e) {}
     }
 
-    async function init() {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("role", "asvand")
-        .single();
-      
-      if (profile) {
-        setAsvandId(profile.id);
-        loadData(profile.id);
-      } else {
-        setLoading(false);
-      }
-    }
-    init();
+    setAsvandId(ASVAND_PROFILE_ID);
+    loadData(ASVAND_PROFILE_ID);
   }, []);
 
   // Compute unified records (combining database records and local logs by date)
@@ -210,7 +199,7 @@ export default function AsvandMeasurementsPage() {
         }
       }
 
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = getLocalDateString();
 
       // 2. Save goals to local storage
       const newGoals: Record<string, number> = {};

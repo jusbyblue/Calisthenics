@@ -165,3 +165,9 @@ REVOKE EXECUTE ON FUNCTION public.get_db_size() FROM PUBLIC;
 -- Grant execution privilege exclusively to the anon client role
 GRANT EXECUTE ON FUNCTION public.get_db_size() TO anon;
 
+-- ============================================================
+-- PLANNED OPTIMIZATIONS (To be run during database migration phase)
+-- ============================================================
+-- CREATE INDEX IF NOT EXISTS idx_pr_logs_profile_date ON pr_logs(profile_id, date DESC);
+
+
