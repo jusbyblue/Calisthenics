@@ -12,13 +12,15 @@ interface CardProps {
 export function Card({ children, className = "", onClick, accent, style }: CardProps) {
   const combinedStyle = {
     ...style,
-    ...(accent ? { borderLeftColor: accent, borderLeftWidth: "3.5px" } : {}),
+    ...(accent ? { borderLeftColor: accent, borderLeftWidth: "4px" } : {}),
   };
 
   return (
     <div
       onClick={onClick}
-      className={`card ${onClick ? "cursor-pointer hover:border-arctic/40 active:scale-[0.99] transition-all duration-150" : ""} ${className}`}
+      className={`bg-surface1 rounded-xl p-5 ${
+        onClick ? "cursor-pointer hover:bg-surface2 active:scale-[0.98] transition-all duration-200" : ""
+      } border border-border shadow-sm ${className}`}
       style={combinedStyle}
     >
       {children}
@@ -27,9 +29,18 @@ export function Card({ children, className = "", onClick, accent, style }: CardP
 }
 
 export function CardInner({ children, className = "", onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
-  return <div onClick={onClick} className={`card-inner ${onClick ? "cursor-pointer" : ""} ${className}`}>{children}</div>;
+  return (
+    <div 
+      onClick={onClick} 
+      className={`bg-surface2 rounded-lg p-4 border border-border/50 ${
+        onClick ? "cursor-pointer hover:bg-surface3 transition-colors" : ""
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function CardLabel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <p className={`label mb-2 ${className}`}>{children}</p>;
+  return <h4 className={`mb-3 uppercase tracking-wider text-[11px] font-bold text-muted ${className}`}>{children}</h4>;
 }

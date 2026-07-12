@@ -3,7 +3,7 @@
 interface ProgressBarProps {
   value: number;       // 0-100
   color?: string;      // hex or css var
-  height?: number;     // px, default 6
+  height?: number;     // px, default 4
   showLabel?: boolean;
   label?: string;
   animated?: boolean;
@@ -12,7 +12,7 @@ interface ProgressBarProps {
 export function ProgressBar({
   value,
   color = "var(--accent)",
-  height = 6,
+  height = 4,
   showLabel = false,
   label,
   animated = true,
@@ -22,10 +22,10 @@ export function ProgressBar({
   return (
     <div className="w-full">
       {(showLabel || label) && (
-        <div className="flex justify-between items-center mb-1">
-          {label && <span className="label">{label}</span>}
+        <div className="flex justify-between items-center mb-1.5">
+          {label && <span className="text-[10px] font-bold uppercase tracking-wider text-muted">{label}</span>}
           {showLabel && (
-            <span className="text-xs font-semibold" style={{ color }}>
+            <span className="text-[10px] font-bold tabular-nums" style={{ color }}>
               {Math.round(clamped)}%
             </span>
           )}
@@ -40,7 +40,7 @@ export function ProgressBar({
           style={{
             width: `${clamped}%`,
             background: color,
-            transition: animated ? "width 0.6s ease" : "none",
+            transition: animated ? "width 0.3s ease-out" : "none",
           }}
         />
       </div>
@@ -59,12 +59,12 @@ export function XPBar({
 }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
-    <div className="xp-bar">
+    <div className="w-full h-1 bg-surface3 overflow-hidden rounded-full">
       <div
-        className="xp-bar-fill"
+        className="h-full rounded-full transition-all duration-300"
         style={{
           width: `${Math.min(pct, 100)}%`,
-          background: `linear-gradient(90deg, ${color}60, ${color})`,
+          background: color,
         }}
       />
     </div>

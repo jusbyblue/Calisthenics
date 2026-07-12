@@ -4,8 +4,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
-import { Card, CardLabel } from "@/components/ui/Card";
+import { Card, CardInner, CardLabel } from "@/components/ui/Card";
 import { PR_CALISTHENICS_MAP, GUILD_CATALOG, getExerciseUnit } from "@/lib/calisthenicsConfig";
+import { ChevronLeft, ChevronRight, PersonStanding, ArrowUpCircle, ArrowDownCircle, Footprints, Shield, HeartPulse, Target, X } from "lucide-react";
 import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
 import { getLocalDateString } from "@/lib/dateUtils";
 
@@ -28,14 +29,14 @@ interface MilestoneRecord {
 const CATEGORIES: Record<
   string,
   {
-    emoji: string;
+    icon: React.ElementType;
     subcategories?: Record<string, string[]>;
     exercises?: string[];
     defaultUnit: string;
   }
 > = {
   "Bodyweight": {
-    emoji: "⚖️",
+    icon: PersonStanding,
     defaultUnit: "reps",
     exercises: [
       "Push-up", "Diamond Push-up", "Wide Push-up", "Archer Push-up", "Pseudo Planche Push-up",
@@ -47,7 +48,7 @@ const CATEGORIES: Record<
     ]
   },
   "Push": {
-    emoji: "🟥",
+    icon: ArrowUpCircle,
     defaultUnit: "kg",
     subcategories: {
       "Chest": [
@@ -70,7 +71,7 @@ const CATEGORIES: Record<
     }
   },
   "Pull": {
-    emoji: "🟦",
+    icon: ArrowDownCircle,
     defaultUnit: "kg",
     subcategories: {
       "Vertical Pull": [
@@ -95,7 +96,7 @@ const CATEGORIES: Record<
     }
   },
   "Legs": {
-    emoji: "🟩",
+    icon: Footprints,
     defaultUnit: "kg",
     subcategories: {
       "Quads": [
@@ -115,7 +116,7 @@ const CATEGORIES: Record<
     }
   },
   "Core": {
-    emoji: "🟨",
+    icon: Shield,
     defaultUnit: "sec",
     exercises: [
       "Plank", "Side Plank", "Reverse Plank", "Hollow Hold", "Arch Hold", "Dead Bug", "Bird Dog",
@@ -125,7 +126,7 @@ const CATEGORIES: Record<
     ]
   },
   "Cardio": {
-    emoji: "🟪",
+    icon: HeartPulse,
     defaultUnit: "min",
     exercises: [
       "Running (1km)", "Running (5km)", "Running (10km)", "Sprint (100m)", "Sprint (200m)",
@@ -133,7 +134,7 @@ const CATEGORIES: Record<
     ]
   },
   "Skills": {
-    emoji: "🤸",
+    icon: Target,
     defaultUnit: "sec",
     exercises: [
       "Handstand Hold", "One Arm Handstand", "Handstand Push-up", "Planche Lean", "Tuck Planche", "Advanced Tuck Planche",
@@ -299,16 +300,16 @@ export default function PRPage() {
     const percent = targetVal > 0 ? Math.min(100, Math.max(0, Math.round((currentVal / targetVal) * 100))) : 0;
 
     return (
-      <div className="flex flex-col gap-1 mt-1.5 max-w-[240px]">
-        <div className="flex justify-between items-center text-[9px] font-bold">
-          <span className={isCompleted ? "text-success" : "text-warning"}>
-            Target: {targetVal} {unitVal} {isCompleted ? "🎉" : ""}
+      <div className="flex flex-col gap-1.5 mt-2 max-w-[240px]">
+        <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider">
+          <span className={isCompleted ? "text-success" : "text-accent"}>
+            Target: {targetVal} {unitVal} {isCompleted ? "✓" : ""}
           </span>
-          <span className="text-secondary">{currentVal} / {targetVal} ({percent}%)</span>
+          <span className="text-muted font-mono">{currentVal} / {targetVal} ({percent}%)</span>
         </div>
-        <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+        <div className="w-full bg-surface2 h-1.5 rounded-full overflow-hidden mt-0.5">
           <div
-            className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-success' : 'bg-accent'}`}
+            className={`h-full rounded-full transition-all duration-500 ${isCompleted ? 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-accent shadow-[0_0_8px_rgba(74,158,255,0.4)]'}`}
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -488,30 +489,27 @@ export default function PRPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex flex-col items-center justify-center p-6 bg-[#0A0A0F]">
-        <div className="w-8 h-8 border-4 border-[#4A9EFF] border-t-transparent rounded-full animate-spin" />
-        <p className="text-[#8A8A9A] text-sm mt-4 font-semibold animate-pulse font-mono">Loading PR Engine...</p>
+      <div className="min-h-dvh flex flex-col items-center justify-center p-6 bg-background">
+        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted text-sm mt-4 font-semibold animate-pulse font-mono">Loading PR Engine...</p>
       </div>
     );
   }
 
   return (
-    <div className="page bg-bg">
+    <div className="page">
       <div className="page-content pb-24">
         
         {/* Navigation & Header */}
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between mb-6 pt-2">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/")}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#1A1A1A] border border-[#2A2A2A] text-white active:scale-95 transition-all"
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface1 border border-border text-primary active:scale-95 transition-all hover:bg-surface2 cursor-pointer shadow-sm"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
+              <ChevronLeft size={20} />
             </button>
-            <h1 className="text-2xl font-bold text-white">PR Database</h1>
+            <h1 className="text-2xl font-black text-primary tracking-tight">PR Database</h1>
           </div>
           
           <button
@@ -520,9 +518,9 @@ export default function PRPage() {
               setFormValue("");
               setFormNotes("");
             }}
-            className="px-4 py-2 text-xs font-bold text-[#000] bg-accent rounded-xl hover:filter hover:brightness-110 active:scale-95 transition-all"
+            className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider text-background bg-accent rounded-xl hover:bg-accent/90 active:scale-95 transition-all shadow-[0_0_15px_rgba(74,158,255,0.2)]"
           >
-            Edit
+            Add Log
           </button>
         </div>
 
@@ -538,32 +536,30 @@ export default function PRPage() {
             const loggedPrCount = catExercises.filter(ex => prRecords.some(r => r.exercise === ex)).length;
 
             return (
-              <Card key={catName} className="p-0 overflow-hidden border border-border">
+              <Card key={catName} className="p-0 overflow-hidden border border-border bg-surface1 shadow-sm">
                 <div
                   onClick={() => setExpandedCategory(isExpanded ? null : catName)}
-                  className="flex justify-between items-center p-4 bg-surface1 hover:bg-surface2/60 cursor-pointer transition-colors"
+                  className="flex justify-between items-center p-5 bg-surface1 hover:bg-surface2 cursor-pointer transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{catData.emoji}</span>
-                    <div>
-                      <span className="font-bold text-white text-base">{catName}</span>
+                  <div className="flex items-center gap-5">
+                    <div className="w-12 h-12 rounded-2xl bg-accent/10 border-2 border-accent/20 flex items-center justify-center text-accent shadow-[0_0_10px_rgba(74,158,255,0.1)]">
+                      <catData.icon size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-black text-lg text-primary tracking-tight">{catName}</span>
+                      <span className="text-[9px] font-bold text-muted uppercase tracking-wider">{loggedPrCount} logged</span>
                     </div>
                   </div>
-                  <svg
-                    className={`w-5 h-5 text-secondary transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  <ChevronRight size={20} className={`text-muted transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} />
                 </div>
 
                 {isExpanded && (
-                  <div className="p-4 pt-1 bg-surface1 border-t border-border/30 flex flex-col gap-3">
+                  <div className="p-5 pt-2 bg-surface1 border-t border-border/50 flex flex-col gap-4">
                     {/* Render subcategories if they exist */}
                     {catData.subcategories ? (
                       Object.entries(catData.subcategories).map(([subName, list]) => (
                         <div key={subName} className="flex flex-col gap-2 mt-2">
-                          <p className="text-[10px] font-bold text-accent uppercase tracking-widest border-b border-border/20 pb-1">{subName}</p>
+                          <p className="text-[9px] font-bold text-accent uppercase tracking-widest border-b border-border/20 pb-2">{subName}</p>
                           {list.map(ex => {
                             const exLogs = prRecords.filter(r => r.exercise === ex);
                             const bestLog = exLogs.length > 0 ? exLogs.reduce((best, current) => current.value > best.value ? current : best, exLogs[0]) : null;
@@ -571,25 +567,25 @@ export default function PRPage() {
                             const msRecord = milestones.find(m => m.exercise === ex);
 
                             return (
-                              <div key={ex} className="flex justify-between items-start py-2.5 border-b border-border/10 text-xs">
-                                <div className="flex-1 pr-2">
-                                  <span className="text-white font-semibold block">{ex}</span>
+                              <div key={ex} className="flex justify-between items-start py-3 border-b border-border/20 text-sm">
+                                <div className="flex-1 pr-3">
+                                  <span className="text-primary font-bold block">{ex}</span>
                                   {bestLog && (
-                                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[9px] text-secondary">
-                                      <span>Date: {bestLog.date}</span>
-                                      <span>•</span>
-                                      <span>BW: {getBwForDate(bestLog.date)}</span>
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[9px] text-muted font-bold tracking-wider uppercase">
+                                      <span className="font-mono">{bestLog.date}</span>
+                                      <span className="text-border/50">•</span>
+                                      <span className="font-mono">BW: {getBwForDate(bestLog.date)}</span>
                                       {bestLog.notes && (
                                         <>
-                                          <span>•</span>
-                                          <span className="italic">"{bestLog.notes}"</span>
+                                          <span className="text-border/50">•</span>
+                                          <span className="italic text-secondary tracking-normal normal-case">"{bestLog.notes}"</span>
                                         </>
                                       )}
                                     </div>
                                   )}
                                   {renderTargetProgress(msRecord, bestLog, unitVal)}
                                 </div>
-                                <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
+                                <span className={bestLog ? "font-black text-accent whitespace-nowrap text-base" : "text-muted font-bold text-[10px] uppercase tracking-wider whitespace-nowrap mt-1"}>
                                   {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
                                 </span>
                               </div>
@@ -598,7 +594,7 @@ export default function PRPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="flex flex-col gap-2.5 mt-2">
+                      <div className="flex flex-col gap-2 mt-2">
                         {catExercises.map(ex => {
                           const exLogs = prRecords.filter(r => r.exercise === ex);
                           const bestLog = exLogs.length > 0 ? exLogs.reduce((best, current) => current.value > best.value ? current : best, exLogs[0]) : null;
@@ -606,25 +602,25 @@ export default function PRPage() {
                           const msRecord = milestones.find(m => m.exercise === ex);
 
                           return (
-                            <div key={ex} className="flex justify-between items-start py-2.5 border-b border-border/10 text-xs">
-                              <div className="flex-1 pr-2">
-                                <span className="text-white font-semibold block">{ex}</span>
+                            <div key={ex} className="flex justify-between items-start py-3 border-b border-border/20 text-sm">
+                              <div className="flex-1 pr-3">
+                                <span className="text-primary font-bold block">{ex}</span>
                                 {bestLog && (
-                                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 text-[9px] text-secondary">
-                                    <span>Date: {bestLog.date}</span>
-                                    <span>•</span>
-                                    <span>BW: {getBwForDate(bestLog.date)}</span>
-                                    {bestLog.notes && (
-                                      <>
-                                        <span>•</span>
-                                        <span className="italic">"{bestLog.notes}"</span>
-                                      </>
-                                    )}
-                                  </div>
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[9px] text-muted font-bold tracking-wider uppercase">
+                                      <span className="font-mono">{bestLog.date}</span>
+                                      <span className="text-border/50">•</span>
+                                      <span className="font-mono">BW: {getBwForDate(bestLog.date)}</span>
+                                      {bestLog.notes && (
+                                        <>
+                                          <span className="text-border/50">•</span>
+                                          <span className="italic text-secondary tracking-normal normal-case">"{bestLog.notes}"</span>
+                                        </>
+                                      )}
+                                    </div>
                                 )}
                                 {renderTargetProgress(msRecord, bestLog, unitVal)}
                               </div>
-                              <span className={bestLog ? "font-bold text-accent whitespace-nowrap" : "text-secondary/40 font-medium text-[11px] whitespace-nowrap"}>
+                              <span className={bestLog ? "font-black text-accent whitespace-nowrap text-base" : "text-muted font-bold text-[10px] uppercase tracking-wider whitespace-nowrap mt-1"}>
                                 {bestLog ? `${bestLog.value} ${bestLog.unit}` : "No PR Yet"}
                               </span>
                             </div>
@@ -642,23 +638,23 @@ export default function PRPage() {
 
         {/* EDIT DIALOG (MODAL) */}
         {isEditOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000]/80 animate-fade-in">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
             <div className="w-full max-w-sm bg-surface1 border border-border rounded-2xl overflow-hidden shadow-2xl animate-slide-up">
               
               {/* Modal Tabs */}
               <div className="flex border-b border-border">
                 <button
                   onClick={() => setEditTab("pr")}
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-                    editTab === "pr" ? "bg-accent/10 text-accent border-b-2 border-accent" : "text-secondary hover:text-white"
+                  className={`flex-1 py-4 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    editTab === "pr" ? "bg-accent/10 text-accent border-b-2 border-accent" : "text-muted hover:text-primary"
                   }`}
                 >
                   New PR
                 </button>
                 <button
                   onClick={() => setEditTab("milestone")}
-                  className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-                    editTab === "milestone" ? "bg-accent/10 text-accent border-b-2 border-accent" : "text-secondary hover:text-white"
+                  className={`flex-1 py-4 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    editTab === "milestone" ? "bg-accent/10 text-accent border-b-2 border-accent" : "text-muted hover:text-primary"
                   }`}
                 >
                   New Target
@@ -666,30 +662,28 @@ export default function PRPage() {
               </div>
 
               {/* Form content */}
-              <div className="p-5">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xs font-bold text-secondary uppercase">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-5">
+                  <span className="text-[10px] font-bold text-muted uppercase tracking-wider">
                     {editTab === "pr" ? "Add Personal Record" : "Add Target Goal"}
                   </span>
-                  <button onClick={() => setIsEditOpen(false)} className="text-secondary hover:text-white">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                  <button onClick={() => setIsEditOpen(false)} className="text-muted hover:text-primary transition-colors cursor-pointer">
+                    <X size={20} />
                   </button>
                 </div>
 
-                <form onSubmit={editTab === "pr" ? handleSavePr : handleSaveMilestone} className="flex flex-col gap-4">
+                <form onSubmit={editTab === "pr" ? handleSavePr : handleSaveMilestone} className="flex flex-col gap-5">
                   {/* Category Dropdown */}
                   <div>
-                    <label className="text-[10px] text-secondary uppercase block mb-1.5">Category</label>
+                    <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Category</label>
                     <select
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full bg-surface2 py-2.5 px-3 border border-border rounded-xl text-sm text-white focus:outline-none"
+                      className="w-full bg-surface2 py-3 px-4 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                     >
                       {Object.keys(CATEGORIES).map(cat => (
                         <option key={cat} value={cat}>
-                          {CATEGORIES[cat].emoji} {cat}
+                          {cat}
                         </option>
                       ))}
                     </select>
@@ -697,11 +691,11 @@ export default function PRPage() {
 
                   {/* Exercise Dropdown */}
                   <div>
-                    <label className="text-[10px] text-secondary uppercase block mb-1.5">Workout</label>
+                    <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Workout</label>
                     <select
                       value={formExercise}
                       onChange={(e) => setFormExercise(e.target.value)}
-                      className="w-full bg-surface2 py-2.5 px-3 border border-border rounded-xl text-sm text-white focus:outline-none"
+                      className="w-full bg-surface2 py-3 px-4 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                     >
                       {availableExercises.map(ex => (
                         <option key={ex} value={ex}>
@@ -714,13 +708,13 @@ export default function PRPage() {
                   {editTab === "pr" ? (
                     <>
                       {/* PR Form Side-by-Side: Current PR on Left, Enter New PR on Right */}
-                      <div className="grid grid-cols-2 gap-4 items-center bg-surface2/60 border border-border/40 p-3.5 rounded-xl">
+                      <div className="grid grid-cols-2 gap-4 items-center bg-surface2/30 border border-border/40 p-4 rounded-xl">
                         <div>
-                          <span className="text-secondary text-[10px] uppercase block">Current PR</span>
-                          <span className="text-white text-sm font-bold mt-1 block">{currentPrValue}</span>
+                          <span className="text-muted text-[9px] font-bold uppercase tracking-wider block">Current PR</span>
+                          <span className="text-primary text-sm font-bold mt-1 block">{currentPrValue}</span>
                         </div>
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Enter New PR</label>
+                          <label className="text-[9px] text-muted font-bold uppercase tracking-wider block mb-1">Enter New PR</label>
                           <input
                             type="number"
                             step="0.1"
@@ -728,19 +722,19 @@ export default function PRPage() {
                             placeholder="e.g. 15"
                             value={formValue}
                             onChange={(e) => setFormValue(e.target.value)}
-                            className="w-full bg-surface1 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all tabular-nums placeholder:text-muted/50"
                           />
                         </div>
                       </div>
 
                       {/* Unit & Notes */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Unit</label>
+                          <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Unit</label>
                           <select
                             value={formUnit}
                             onChange={(e) => setFormUnit(e.target.value)}
-                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2.5 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                           >
                             <option value="reps">reps</option>
                             <option value="kg">kg</option>
@@ -750,13 +744,13 @@ export default function PRPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Notes</label>
+                          <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Notes</label>
                           <input
                             type="text"
-                            placeholder="Optional notes"
+                            placeholder="Optional"
                             value={formNotes}
                             onChange={(e) => setFormNotes(e.target.value)}
-                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2.5 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                           />
                         </div>
                       </div>
@@ -764,13 +758,13 @@ export default function PRPage() {
                   ) : (
                     <>
                       {/* Milestone Form Side-by-Side: Current Target on Left, Enter New Target on Right */}
-                      <div className="grid grid-cols-2 gap-4 items-center bg-surface2/60 border border-border/40 p-3.5 rounded-xl">
+                      <div className="grid grid-cols-2 gap-4 items-center bg-surface2/30 border border-border/40 p-4 rounded-xl">
                         <div>
-                          <span className="text-secondary text-[10px] uppercase block">Current Target</span>
-                          <span className="text-white text-sm font-bold mt-1 block">{currentTargetValue}</span>
+                          <span className="text-muted text-[9px] font-bold uppercase tracking-wider block">Current Target</span>
+                          <span className="text-primary text-sm font-bold mt-1 block">{currentTargetValue}</span>
                         </div>
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">New Target</label>
+                          <label className="text-[9px] text-muted font-bold uppercase tracking-wider block mb-1">New Target</label>
                           <input
                             type="number"
                             step="0.1"
@@ -778,19 +772,19 @@ export default function PRPage() {
                             placeholder="e.g. 20"
                             value={formValue}
                             onChange={(e) => setFormValue(e.target.value)}
-                            className="w-full bg-surface1 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all tabular-nums placeholder:text-muted/50"
                           />
                         </div>
                       </div>
 
                       {/* Unit & Notes */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Unit</label>
+                          <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Unit</label>
                           <select
                             value={formUnit}
                             onChange={(e) => setFormUnit(e.target.value)}
-                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2.5 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                           >
                             <option value="reps">reps</option>
                             <option value="kg">kg</option>
@@ -800,28 +794,28 @@ export default function PRPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[10px] text-secondary uppercase block mb-1">Notes</label>
+                          <label className="text-[10px] text-muted font-bold uppercase tracking-wider block mb-2">Notes</label>
                           <input
                             type="text"
-                            placeholder="Optional notes"
+                            placeholder="Optional"
                             value={formNotes}
                             onChange={(e) => setFormNotes(e.target.value)}
-                            className="w-full bg-surface2 py-2 px-2.5 border border-border rounded-lg text-sm text-white focus:outline-none"
+                            className="w-full bg-surface2 py-2.5 px-3 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                           />
                         </div>
                       </div>
 
                       {/* Milestone Completed Box Underneath */}
-                      <div className="flex items-center gap-2.5 bg-surface2/40 p-3 border border-border/40 rounded-xl">
+                      <div className="flex items-center gap-3 bg-surface2/30 p-4 border border-border/40 rounded-xl mt-1">
                         <input
                            type="checkbox"
                            id="milestoneCompleted"
                            checked={formCompleted}
                            onChange={(e) => setFormCompleted(e.target.checked)}
-                           className="w-4.5 h-4.5 rounded border-border bg-surface2 text-accent focus:ring-0 cursor-pointer"
+                           className="w-5 h-5 rounded border-border bg-surface2 text-accent focus:ring-accent focus:ring-offset-0 focus:ring-2 cursor-pointer"
                         />
-                        <label htmlFor="milestoneCompleted" className="text-xs font-semibold text-white cursor-pointer select-none">
-                          Completed
+                        <label htmlFor="milestoneCompleted" className="text-sm font-bold text-primary cursor-pointer select-none">
+                          Mark as completed
                         </label>
                       </div>
                     </>
@@ -830,7 +824,11 @@ export default function PRPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="btn btn-primary text-xs font-bold py-2.5 w-full mt-2"
+                    className={`text-[10px] uppercase tracking-wider font-bold py-3.5 px-6 rounded-xl w-full mt-3 transition-all ${
+                      isSubmitting 
+                        ? "bg-surface2 text-muted cursor-not-allowed" 
+                        : "bg-accent text-background hover:bg-accent/90 active:scale-95 shadow-[0_0_15px_rgba(74,158,255,0.2)]"
+                    }`}
                   >
                     {isSubmitting ? "Saving..." : (editTab === "pr" ? "Save PR" : "Save Target")}
                   </button>
@@ -842,23 +840,25 @@ export default function PRPage() {
         )}
 
         {/* Recent Logs & History (with Edit/Delete support) */}
-        <Card className="mt-6 border border-border bg-surface1">
-          <CardLabel>Recent Logs History</CardLabel>
+        <Card className="mt-6 border border-border bg-surface1 px-0 pt-5 pb-2 shadow-sm">
+          <div className="px-5 mb-5">
+            <span className="text-[10px] text-muted font-bold tracking-wider uppercase block">Recent Logs History</span>
+          </div>
           {prRecords.length === 0 ? (
-            <p className="text-xs text-secondary italic py-4 text-center">No PR logs recorded yet</p>
+            <p className="text-xs text-muted font-bold uppercase tracking-wider py-8 text-center">No PR logs recorded yet</p>
           ) : (
-            <div className="flex flex-col gap-2.5 mt-2">
-              {prRecords.slice(0, 15).map(r => (
-                <div key={r.id} className="flex justify-between items-center py-2.5 border-b border-border/10 text-xs">
-                  <div className="flex-1 pr-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-white font-bold">{r.exercise}</span>
-                      <span className="text-[9px] text-secondary font-mono">{r.date}</span>
+            <div className="flex flex-col mt-2">
+              {prRecords.slice(0, 15).map((r, i) => (
+                <div key={r.id} className={`flex justify-between items-center py-4 px-5 border-t border-border/20 text-sm hover:bg-surface2/30 transition-colors`}>
+                  <div className="flex-1 pr-3">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-primary font-bold">{r.exercise}</span>
+                      <span className="text-[9px] text-muted font-mono font-bold tracking-wider uppercase">{r.date}</span>
                     </div>
-                    {r.notes && <p className="text-[10px] text-secondary mt-0.5 italic">"{r.notes}"</p>}
+                    {r.notes && <p className="text-[11px] text-muted italic">"{r.notes}"</p>}
                   </div>
-                  <div className="flex items-center gap-3.5">
-                    <span className="font-extrabold text-accent">{r.value} {r.unit}</span>
+                  <div className="flex items-center gap-4">
+                    <span className="font-black text-accent text-base">{r.value} {r.unit}</span>
                     
                     {/* Delete Action */}
                     <button
@@ -876,10 +876,10 @@ export default function PRPage() {
                           }
                         }
                       }}
-                      className="text-[#FF4A4A] hover:text-[#FF2A2A] active:scale-95 transition-all cursor-pointer"
+                      className="text-[#FF4A4A] hover:text-[#FF2A2A] active:scale-95 transition-all cursor-pointer p-1.5 hover:bg-[#FF4A4A]/10 rounded-lg"
                       title="Delete Log"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>

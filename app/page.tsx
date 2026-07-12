@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardInner, CardLabel } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { NavBar } from "@/components/ui/NavBar";
+import { GuildMark } from "@/components/ui/GuildMark";
+import { ChevronRight, Target, Trophy, Book, Lock, Check, Zap, Activity } from "lucide-react";
 import {
   GUILD_CATALOG,
   CatalogItem,
@@ -570,10 +572,15 @@ export default function Dashboard() {
       <div className="page-content pb-24">
         
         {/* Header - Who Am I? */}
-        <div className="pt-2 flex justify-between items-center">
-          <div>
-            <p className="label">Dashboard</p>
-            <h1 className="text-2xl font-bold text-primary">Calisthenics Guild</h1>
+        <div className="pt-2 flex justify-between items-center mb-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-surface1 border border-border shadow-sm">
+              <GuildMark size={20} className="text-primary" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-primary tracking-tight leading-none">Calisthenics Guild</h1>
+              <p className="text-[10px] font-bold text-muted uppercase tracking-wider mt-1.5">Athlete Operating System</p>
+            </div>
           </div>
           <button
             onClick={() => {
@@ -583,98 +590,107 @@ export default function Dashboard() {
                 router.push("/calisthenics");
               }
             }}
-            className="px-4 py-2 bg-accent hover:bg-accent/80 text-white rounded-xl text-xs font-bold transition-all shadow-[0_0_10px_rgba(74,158,255,0.3)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            className="btn btn-primary text-xs font-bold py-2 px-4 shadow-[0_0_15px_rgba(74,158,255,0.2)] rounded-xl"
           >
-            Train Now ⚡
+            <Zap size={14} className="fill-bg mr-1" />
+            <span>Train</span>
           </button>
         </div>
 
         {/* Identity & Level */}
-        <Card className="relative overflow-hidden bg-gradient-to-br from-[#10101C] to-[#0A0A10]">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex justify-between items-start mb-2">
+        <Card className="relative overflow-hidden bg-surface1">
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-[10px] text-secondary font-bold uppercase tracking-wider">Level {levelInfo.level}</p>
-              <h2 className="text-2xl font-black text-white mt-0.5">{levelInfo.title}</h2>
+              <p className="text-[10px] text-accent font-bold uppercase tracking-wider mb-1">Level {levelInfo.level}</p>
+              <h2 className="text-xl font-bold text-primary tracking-tight">{levelInfo.title}</h2>
             </div>
-            <div className="text-right">
-              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider">Total XP</span>
-              <p className="text-sm font-mono font-black text-accent mt-0.5">{totalCalisthenicsXp.toLocaleString()} XP</p>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] text-muted uppercase font-bold tracking-wider mb-1">Total XP</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-base font-mono font-bold text-primary tabular-nums">{totalCalisthenicsXp.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-muted uppercase tracking-wider">XP</span>
+              </div>
             </div>
           </div>
-          <div className="mt-4">
-            <div className="flex justify-between text-[10px] text-secondary mb-1">
-              <span>XP PROGRESS</span>
-              <span>{levelInfo.currentXp} / {levelInfo.nextLevelXp} XP</span>
+          <div>
+            <div className="flex justify-between items-baseline mb-2">
+              <span className="text-[9px] text-muted font-bold tracking-wider uppercase">XP Progress</span>
+              <div className="flex items-baseline gap-1 text-[10px]">
+                <span className="tabular-nums font-mono font-bold text-primary">{levelInfo.currentXp} / {levelInfo.nextLevelXp}</span>
+                <span className="font-bold text-muted uppercase tracking-wider">XP</span>
+              </div>
             </div>
-            <ProgressBar value={levelInfo.progress} color="var(--accent)" height={6} />
+            <ProgressBar value={levelInfo.progress} color="var(--accent)" height={4} />
           </div>
         </Card>
 
         {/* Quick Actions Row */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-4 gap-2.5">
           <button
             onClick={() => router.push("/calisthenics")}
-            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="flex flex-col items-center justify-center py-3 bg-surface1 hover:bg-surface2 rounded-xl border border-border text-center transition-colors cursor-pointer"
           >
-            <span className="text-lg">📚</span>
-            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Book Trees</span>
+            <Book size={18} className="text-muted mb-1.5" />
+            <span className="text-[9px] text-secondary font-bold uppercase tracking-wide">Skill Tree</span>
           </button>
           <button
             onClick={() => router.push("/weight")}
-            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="flex flex-col items-center justify-center py-3 bg-surface1 hover:bg-surface2 rounded-xl border border-border text-center transition-colors cursor-pointer"
           >
-            <span className="text-lg">⚖️</span>
-            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Log Weight</span>
+            <Activity size={18} className="text-muted mb-1.5" />
+            <span className="text-[9px] text-secondary font-bold uppercase tracking-wide">Log Weight</span>
           </button>
           <button
             onClick={() => router.push("/pr")}
-            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="flex flex-col items-center justify-center py-3 bg-surface1 hover:bg-surface2 rounded-xl border border-border text-center transition-colors cursor-pointer"
           >
-            <span className="text-lg">🏆</span>
-            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Log PR</span>
+            <Trophy size={18} className="text-muted mb-1.5" />
+            <span className="text-[9px] text-secondary font-bold uppercase tracking-wide">Log PR</span>
           </button>
           <button
             onClick={() => router.push("/measurements")}
-            className="flex flex-col items-center justify-center p-2.5 bg-[#10101C]/80 hover:bg-[#151528] rounded-xl border border-border/20 text-center transition-all hover:-translate-y-0.5 cursor-pointer"
+            className="flex flex-col items-center justify-center py-3 bg-surface1 hover:bg-surface2 rounded-xl border border-border text-center transition-colors cursor-pointer"
           >
-            <span className="text-lg">📏</span>
-            <span className="text-[8px] text-secondary font-bold uppercase mt-1">Measures</span>
+            <Target size={18} className="text-muted mb-1.5" />
+            <span className="text-[9px] text-secondary font-bold uppercase tracking-wide">Measures</span>
           </button>
         </div>
 
         {/* Database Storage Usage Card */}
-        <Card className="flex flex-col gap-2 bg-[#101018]/90 border border-border/20 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-16 h-16 bg-[#4A9EFF]/5 rounded-full blur-2xl pointer-events-none" />
+        <Card className="flex flex-col gap-3 relative overflow-hidden bg-surface1">
           <CardLabel>Database Storage</CardLabel>
           {dbLoading ? (
-            <div className="flex flex-col gap-1.5 py-1 animate-pulse">
-              <div className="flex justify-between text-[10px] text-secondary">
-                <span>Retrieving usage...</span>
-                <span>-- MB / -- MB</span>
+            <div className="flex flex-col gap-2 py-1 animate-pulse">
+              <div className="flex justify-between items-baseline text-[10px]">
+                <span className="text-muted font-bold tracking-wider uppercase">Retrieving usage...</span>
+                <span className="font-mono text-muted tabular-nums">-- MB / -- MB</span>
               </div>
-              <ProgressBar value={0} color="var(--accent)" height={5} />
+              <ProgressBar value={0} color="var(--accent)" height={4} />
             </div>
           ) : dbError || dbSizeMb === null ? (
-            <div className="py-1 text-[11px] text-secondary/70 italic flex items-center gap-1.5">
-              <span>⚠️</span>
-              <span>Size metrics temporarily unavailable</span>
+            <div className="py-1 text-[10px] text-muted italic flex items-center gap-1.5 font-bold uppercase tracking-wider">
+              <span className="text-warning">!</span>
+              <span>Metrics temporarily unavailable</span>
             </div>
           ) : (
             (() => {
               const usagePercent = Math.min(100, Math.max(0, (dbSizeMb / DB_QUOTA_MB) * 100));
-              const progressColor = usagePercent > 80 ? "#FF4A4A" : "var(--accent)";
+              const progressColor = usagePercent > 80 ? "var(--warning)" : "var(--accent)";
               return (
                 <div className="flex flex-col gap-2 py-0.5">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-[10px] font-bold text-white tracking-wide uppercase">
+                    <span className="text-[10px] font-bold text-primary tracking-wider uppercase">
                       {usagePercent.toFixed(2)}% Used
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-secondary">
-                      {dbSizeMb.toFixed(2)} MB <span className="text-secondary/50">/</span> {DB_QUOTA_MB} MB
-                    </span>
+                    <div className="flex items-baseline gap-1 text-[10px]">
+                      <span className="font-mono font-bold text-primary tabular-nums">{dbSizeMb.toFixed(2)}</span>
+                      <span className="font-bold text-muted uppercase tracking-wider">MB</span>
+                      <span className="text-muted mx-0.5">/</span>
+                      <span className="font-mono font-bold text-primary tabular-nums">{DB_QUOTA_MB}</span>
+                      <span className="font-bold text-muted uppercase tracking-wider">MB</span>
+                    </div>
                   </div>
-                  <ProgressBar value={usagePercent} color={progressColor} height={5} />
+                  <ProgressBar value={usagePercent} color={progressColor} height={4} />
                 </div>
               );
             })()
@@ -686,100 +702,100 @@ export default function Dashboard() {
           <CardLabel>Mastery Paths</CardLabel>
           
           {/* Legs */}
-          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=legs")}>
+          <div className="flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=legs")}>
             <div className="flex justify-between items-center">
-              <span className="text-white text-xs font-bold flex items-center gap-2">
-                <span>📕</span> Leg Mastery
+              <span className="text-primary text-xs font-bold flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Leg Mastery
               </span>
-              <span className="font-extrabold text-accent text-xs">{legsAvg}%</span>
+              <span className="font-bold text-accent text-xs tabular-nums">{legsAvg}%</span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               <span>{pathStats.legs.mastered} / {pathStats.legs.total} Mastered</span>
-              <span className="flex items-center gap-0.5">Tap to Open →</span>
+              <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
             </div>
           </div>
 
           {/* Push */}
-          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=push")}>
+          <div className="flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=push")}>
             <div className="flex justify-between items-center">
-              <span className="text-white text-xs font-bold flex items-center gap-2">
-                <span>📘</span> Push Mastery
+              <span className="text-primary text-xs font-bold flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Push Mastery
               </span>
-              <span className="font-extrabold text-accent text-xs">{pushAvg}%</span>
+              <span className="font-bold text-accent text-xs tabular-nums">{pushAvg}%</span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               <span>{pathStats.push.mastered} / {pathStats.push.total} Mastered</span>
-              <span className="flex items-center gap-0.5">Tap to Open →</span>
+              <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
             </div>
           </div>
 
           {/* Pull */}
-          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=pull")}>
+          <div className="flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=pull")}>
             <div className="flex justify-between items-center">
-              <span className="text-white text-xs font-bold flex items-center gap-2">
-                <span>📙</span> Pull Mastery
+              <span className="text-primary text-xs font-bold flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Pull Mastery
               </span>
-              <span className="font-extrabold text-accent text-xs">{pullAvg}%</span>
+              <span className="font-bold text-accent text-xs tabular-nums">{pullAvg}%</span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               <span>{pathStats.pull.mastered} / {pathStats.pull.total} Mastered</span>
-              <span className="flex items-center gap-0.5">Tap to Open →</span>
+              <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
             </div>
           </div>
 
           {/* Core */}
-          <div className="flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=core")}>
+          <div className="flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=core")}>
             <div className="flex justify-between items-center">
-              <span className="text-white text-xs font-bold flex items-center gap-2">
-                <span>📗</span> Core Mastery
+              <span className="text-primary text-xs font-bold flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" /> Core Mastery
               </span>
-              <span className="font-extrabold text-accent text-xs">{coreAvg}%</span>
+              <span className="font-bold text-accent text-xs tabular-nums">{coreAvg}%</span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               <span>{pathStats.core.mastered} / {pathStats.core.total} Mastered</span>
-              <span className="flex items-center gap-0.5">Tap to Open →</span>
+              <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
             </div>
           </div>
 
           {/* Skills */}
-          <div className={skillsLocked ? "flex flex-col gap-1.5 bg-surface2/10 px-4 py-3 border border-border/10 rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer"} onClick={skillsLocked ? undefined : () => router.push("/calisthenics?book=skills")}>
+          <div className={skillsLocked ? "flex flex-col gap-1.5 bg-surface2/50 px-4 py-3 border border-border rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer"} onClick={skillsLocked ? undefined : () => router.push("/calisthenics?book=skills")}>
             <div className="flex justify-between items-center">
-              <span className={skillsLocked ? "text-secondary/70 text-xs font-bold flex items-center gap-2" : "text-white text-xs font-bold flex items-center gap-2"}>
-                <span>📕</span> Skills & Balance
+              <span className={skillsLocked ? "text-muted text-xs font-bold flex items-center gap-2" : "text-primary text-xs font-bold flex items-center gap-2"}>
+                {skillsLocked ? <Lock size={12} /> : <span className="w-1.5 h-1.5 rounded-full bg-accent" />} Skills & Balance
               </span>
-              <span className={skillsLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-                {skillsLocked ? "🔒 Locked" : `${skillsAvg}%`}
+              <span className={skillsLocked ? "text-muted italic text-xs font-medium" : "font-bold text-accent text-xs tabular-nums"}>
+                {skillsLocked ? "Locked" : `${skillsAvg}%`}
               </span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               {skillsLocked ? (
-                <span className="text-secondary/60">Complete Base Books (Avg &ge; 60%)</span>
+                <span>Complete Base Books (Avg &ge; 60%)</span>
               ) : (
                 <>
                   <span>{pathStats.skills.mastered} / {pathStats.skills.total} Mastered</span>
-                  <span className="flex items-center gap-0.5">Tap to Open →</span>
+                  <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
                 </>
               )}
             </div>
           </div>
 
           {/* Elite */}
-          <div className={eliteLocked ? "flex flex-col gap-1.5 bg-surface2/10 px-4 py-3 border border-border/10 rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface2/20 px-4 py-3 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer"} onClick={eliteLocked ? undefined : () => router.push("/calisthenics?book=elite")}>
+          <div className={eliteLocked ? "flex flex-col gap-1.5 bg-surface2/50 px-4 py-3 border border-border rounded-xl opacity-75" : "flex flex-col gap-1.5 bg-surface1 px-4 py-3 border border-border rounded-xl hover:border-accent/40 transition-colors cursor-pointer"} onClick={eliteLocked ? undefined : () => router.push("/calisthenics?book=elite")}>
             <div className="flex justify-between items-center">
-              <span className={eliteLocked ? "text-secondary/70 text-xs font-bold flex items-center gap-2" : "text-white text-xs font-bold flex items-center gap-2"}>
-                <span>📘</span> Elite Skills
+              <span className={eliteLocked ? "text-muted text-xs font-bold flex items-center gap-2" : "text-primary text-xs font-bold flex items-center gap-2"}>
+                {eliteLocked ? <Lock size={12} /> : <span className="w-1.5 h-1.5 rounded-full bg-accent" />} Elite Skills
               </span>
-              <span className={eliteLocked ? "text-secondary italic text-xs font-medium" : "font-extrabold text-accent text-xs"}>
-                {eliteLocked ? "🔒 Locked" : `${eliteAvg}%`}
+              <span className={eliteLocked ? "text-muted italic text-xs font-medium" : "font-bold text-accent text-xs tabular-nums"}>
+                {eliteLocked ? "Locked" : `${eliteAvg}%`}
               </span>
             </div>
-            <div className="flex justify-between items-center text-[10px] text-secondary">
+            <div className="flex justify-between items-center text-[10px] text-muted">
               {eliteLocked ? (
-                <span className="text-secondary/60">Complete all Master Books</span>
+                <span>Complete all Master Books</span>
               ) : (
                 <>
                   <span>{pathStats.elite.mastered} / {pathStats.elite.total} Mastered</span>
-                  <span className="flex items-center gap-0.5">Tap to Open →</span>
+                  <span className="flex items-center gap-0.5">Tap to Open <ChevronRight size={10} /></span>
                 </>
               )}
             </div>
@@ -789,71 +805,90 @@ export default function Dashboard() {
         {/* 2. Ongoing Target Card */}
         {ongoingTarget ? (
           <Card 
-            className="border border-accent/20 bg-accent/5 hover:border-accent/40 hover:bg-accent/10 transition-all cursor-pointer"
+            className="border-accent/40 bg-accent/5 hover:border-accent hover:bg-accent/10 transition-colors cursor-pointer"
             onClick={() => router.push(`/calisthenics?book=${ongoingTarget.item.path}&focus=${encodeURIComponent(ongoingTarget.item.name)}`)}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-accent tracking-wider uppercase">🎯 Ongoing Target</span>
-              <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+              <span className="text-xs font-bold text-accent tracking-wider uppercase flex items-center gap-2">
+                <Target size={14} /> Ongoing Target
+              </span>
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_10px_rgba(74,158,255,0.8)]" />
             </div>
-            <div className="mt-3 flex flex-col gap-2">
+            <div className="mt-4 flex flex-col gap-3">
               <div>
-                <span className="text-[10px] text-secondary uppercase block">Exercise</span>
-                <span className="text-white font-black text-sm block mt-0.5">{ongoingTarget.item.name}</span>
+                <span className="text-[10px] text-muted uppercase block font-bold tracking-wider mb-1">Exercise</span>
+                <span className="text-primary font-bold text-lg block tracking-tight">{ongoingTarget.item.name}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3 mt-1.5 bg-surface2/30 border border-border/10 p-2.5 rounded-xl">
+              <div className="grid grid-cols-2 gap-3 mt-1 bg-surface2/50 border border-border/50 p-3 rounded-xl">
                 <div>
-                  <span className="text-[9px] text-secondary uppercase block">Current Progress</span>
-                  <span className="text-white font-bold text-xs mt-0.5 block">
-                    {ongoingTarget.isHold 
-                      ? `${ongoingTarget.reps} / ${ongoingTarget.targetReps} sec` 
-                      : `3 × ${ongoingTarget.reps} / ${ongoingTarget.targetReps}`}
-                  </span>
+                  <span className="text-[9px] text-muted uppercase block font-bold tracking-wider mb-1">Current Progress</span>
+                  <div className="flex items-baseline gap-1 text-[10px]">
+                    <span className="text-primary font-mono font-bold text-sm tabular-nums">
+                      {ongoingTarget.isHold 
+                        ? `${ongoingTarget.reps} / ${ongoingTarget.targetReps}` 
+                        : `3 × ${ongoingTarget.reps} / ${ongoingTarget.targetReps}`}
+                    </span>
+                    <span className="font-bold text-muted uppercase tracking-wider">{ongoingTarget.isHold ? 'sec' : ''}</span>
+                  </div>
                 </div>
                 <div>
-                  <span className="text-[9px] text-secondary uppercase block">Remaining</span>
-                  <span className="text-white font-bold text-xs mt-0.5 block">
-                    {ongoingTarget.isHold 
-                      ? `${ongoingTarget.targetReps - ongoingTarget.reps} sec`
-                      : `${ongoingTarget.targetReps - ongoingTarget.reps} ${ongoingTarget.targetReps - ongoingTarget.reps === 1 ? 'rep' : 'reps'}`}
-                  </span>
+                  <span className="text-[9px] text-muted uppercase block font-bold tracking-wider mb-1">Remaining</span>
+                  <div className="flex items-baseline gap-1 text-[10px]">
+                    <span className="text-primary font-mono font-bold text-sm tabular-nums">
+                      {ongoingTarget.targetReps - ongoingTarget.reps}
+                    </span>
+                    <span className="font-bold text-muted uppercase tracking-wider">
+                      {ongoingTarget.isHold ? 'sec' : ongoingTarget.targetReps - ongoingTarget.reps === 1 ? 'rep' : 'reps'}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <div className="mt-2.5 border-t border-border/10 pt-2 flex flex-col gap-1">
-                <span className="text-[9px] text-secondary uppercase font-bold tracking-wider">Reward</span>
-                <p className="text-xs text-success font-semibold">Unlocks: {ongoingTargetUnlocks}</p>
+              <div className="border-t border-border/50 pt-3 flex flex-col gap-1.5">
+                <span className="text-[9px] text-muted uppercase font-bold tracking-wider">Reward</span>
+                <p className="text-xs text-success font-semibold flex items-center gap-1.5">
+                  <Check size={12} /> {ongoingTargetUnlocks}
+                </p>
               </div>
-              <div className="flex gap-4 items-center mt-1.5">
+              <div className="flex gap-4 items-center mt-1">
                 <div className="flex-1">
-                  <span className="text-[10px] text-secondary uppercase block mb-1">Mastery Progress</span>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-[9px] text-muted uppercase font-bold tracking-wider">Mastery Progress</span>
+                    <span className="font-mono font-bold text-accent text-xs tabular-nums">{ongoingTarget.mastery}%</span>
+                  </div>
                   <ProgressBar value={ongoingTarget.mastery} color="var(--accent)" height={4} />
                 </div>
-                <span className="text-xs font-bold text-white bg-surface2 px-2.5 py-1 rounded-lg border border-border/20">{ongoingTarget.mastery}%</span>
               </div>
             </div>
           </Card>
         ) : (
-          <Card className="border border-success/20 bg-success/5">
+          <Card className="border-success/40 bg-success/5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-success tracking-wider uppercase">🎯 Ongoing Target</span>
-              <span className="text-[10px] text-success font-bold">Completed!</span>
+              <span className="text-xs font-bold text-success tracking-wider uppercase flex items-center gap-2">
+                <Target size={14} /> Ongoing Target
+              </span>
+              <span className="text-[10px] text-success font-bold uppercase tracking-wider">Completed</span>
             </div>
-            <p className="text-xs text-secondary mt-2.5 italic">All exercises in your tree have been fully mastered! Great job! 🎉</p>
+            <p className="text-xs text-muted mt-3 font-medium">All exercises in your tree have been fully mastered. Great job.</p>
           </Card>
         )}
 
         {/* 3. Active Targets Card */}
         {((activeTargets && activeTargets.length > 0) || weightTarget) && (
-          <Card className="bg-[#121221]/90">
-            <CardLabel>🎯 Active Targets</CardLabel>
-            <div className="flex flex-col gap-3.5 mt-2">
+          <Card className="bg-surface1">
+            <CardLabel>Active Targets</CardLabel>
+            <div className="flex flex-col gap-4 mt-4">
               {weightTarget && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-white flex items-center gap-1.5">⚖️ Weight</span>
-                    <span className="text-secondary">{weightTarget.current} / {weightTarget.target} {weightTarget.unit}</span>
+                    <span className="text-primary flex items-center gap-2">
+                      <Activity size={14} className="text-muted" /> Weight Target
+                    </span>
+                    <div className="flex items-baseline gap-1 text-[10px]">
+                      <span className="text-muted font-mono tabular-nums">{weightTarget.current} / {weightTarget.target}</span>
+                      <span className="font-bold text-muted uppercase tracking-wider">{weightTarget.unit}</span>
+                    </div>
                   </div>
-                  <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                  <div className="w-full bg-surface3 h-1 rounded-full overflow-hidden">
                     <div
                       className="bg-accent h-full rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, Math.max(0, (weightTarget.current / weightTarget.target) * 100))}%` }}
@@ -864,14 +899,17 @@ export default function Dashboard() {
               {activeTargets.map((tg) => {
                 const percent = Math.min(100, Math.max(0, Math.round((tg.currentValue / tg.targetValue) * 100)));
                 return (
-                  <div key={tg.exercise} className="flex flex-col gap-1">
+                  <div key={tg.exercise} className="flex flex-col gap-2">
                     <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-white">{tg.exercise}</span>
-                      <span className="text-secondary">{tg.currentValue} / {tg.targetValue} {tg.unit}</span>
+                      <span className="text-primary">{tg.exercise}</span>
+                      <div className="flex items-baseline gap-1 text-[10px]">
+                        <span className="text-muted font-mono tabular-nums">{tg.currentValue} / {tg.targetValue}</span>
+                        <span className="font-bold text-muted uppercase tracking-wider">{tg.unit}</span>
+                      </div>
                     </div>
-                    <div className="w-full bg-[#1F1F1F] h-1.5 rounded-full overflow-hidden mt-0.5">
+                    <div className="w-full bg-surface3 h-1 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${tg.completed ? 'bg-success' : 'bg-accent'}`}
+                        className={`h-full rounded-full transition-all duration-500 ${tg.completed ? 'bg-success shadow-[0_0_8px_rgba(52,211,153,0.4)]' : 'bg-accent shadow-[0_0_8px_rgba(74,158,255,0.4)]'}`}
                         style={{ width: `${percent}%` }}
                       />
                     </div>
@@ -883,26 +921,26 @@ export default function Dashboard() {
         )}
 
         {/* 5. Latest Milestone Card */}
-        <Card className="border border-success/20 bg-success/5">
-          <CardLabel className="text-success">🏆 Latest Milestone</CardLabel>
-          <div className="mt-2.5 flex flex-col gap-2.5">
+        <Card className="border-surface3 bg-surface2">
+          <CardLabel>Latest Milestone</CardLabel>
+          <div className="mt-3 flex flex-col gap-4">
             {newestMastered ? (
-              <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
-                <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block">Newest Mastered</span>
-                <h4 className="text-xs font-black text-white mt-0.5">{newestMastered.name}</h4>
-                <span className="text-[9px] text-secondary uppercase font-bold tracking-wider block mt-2">Next Exercise Unlocked</span>
-                <span className="text-xs font-black text-white block mt-0.5">{newestMastered.unlocksText}</span>
+              <div className="p-4 rounded-xl bg-surface1 border border-border">
+                <span className="text-[9px] text-muted uppercase font-bold tracking-wider block mb-1">Newest Mastered</span>
+                <h4 className="text-base font-bold text-primary tracking-tight">{newestMastered.name}</h4>
+                <span className="text-[9px] text-muted uppercase font-bold tracking-wider block mt-4 mb-1">Next Exercise Unlocked</span>
+                <span className="text-sm font-medium text-primary block">{newestMastered.unlocksText}</span>
               </div>
             ) : (
-              <div className="p-2.5 rounded-xl bg-success/10 border border-success/15">
-                <span className="text-xs text-secondary/60 italic block">No skills mastered yet. Train to unlock your first milestone!</span>
+              <div className="p-4 rounded-xl bg-surface1 border border-border">
+                <span className="text-xs font-medium text-muted block">No skills mastered yet. Train to unlock your first milestone.</span>
               </div>
             )}
-            <div className="flex flex-col gap-1 text-xs">
-              <span className="text-[9px] text-secondary uppercase font-bold mb-0.5 block">Recent Achievements</span>
+            <div className="flex flex-col gap-2 text-xs">
+              <span className="text-[9px] text-muted uppercase font-bold mb-1 block tracking-wider">Recent Achievements</span>
               {recentAchievements.map((ach, i) => (
-                <span key={i} className="text-white font-medium flex items-center gap-1.5">
-                  <span className="text-[10px]">⭐</span> {ach}
+                <span key={i} className="text-primary font-medium flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
+                  <Trophy size={14} className="text-accent" /> {ach}
                 </span>
               ))}
             </div>
@@ -912,46 +950,35 @@ export default function Dashboard() {
         {/* 6. Lifetime Stats */}
         <Card>
           <CardLabel>Lifetime Stats</CardLabel>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Exercises Learned</span>
-              <span className="text-lg font-black text-white mt-1 block">{learnedCount}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Exercises Mastered</span>
-              <span className="text-lg font-black text-white mt-1 block">{masteredCount}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Books Completed</span>
-              <span className="text-lg font-black text-white mt-1 block">{booksCompleted} <span className="text-secondary text-xs">/ 6</span></span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">PR Records</span>
-              <span className="text-lg font-black text-white mt-1 block">{totalSessions}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Total XP</span>
-              <span className="text-lg font-black text-white mt-1 block font-mono text-ellipsis overflow-hidden">{totalCalisthenicsXp.toLocaleString()}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Athlete Score</span>
-              <span className="text-lg font-black text-accent mt-1 block">{athleteScore}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Rank</span>
-              <span className="text-lg font-black text-white mt-1 block">{athleteGrade}</span>
-            </div>
-            <div className="bg-surface2/30 p-3 rounded-xl border border-border/10 col-span-2">
-              <span className="text-secondary text-[10px] block uppercase font-medium">Titles</span>
-              <div className="flex flex-col gap-1 mt-1.5">
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            {[
+              { label: "Learned", value: learnedCount },
+              { label: "Mastered", value: masteredCount },
+              { label: "Books Done", value: booksCompleted, suffix: "/ 6" },
+              { label: "PR Records", value: totalSessions },
+              { label: "Total XP", value: totalCalisthenicsXp.toLocaleString() },
+              { label: "Athlete Score", value: athleteScore, color: "text-accent" },
+              { label: "Rank", value: athleteGrade }
+            ].map((stat, i) => (
+              <div key={i} className="bg-surface2/50 p-3 rounded-xl border border-border/50 flex flex-col gap-1.5">
+                <span className="text-muted text-[9px] uppercase font-bold tracking-wider">{stat.label}</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-base font-bold tabular-nums font-mono ${stat.color || 'text-primary'}`}>{stat.value}</span>
+                  {stat.suffix && <span className="text-muted font-mono font-bold text-[10px]">{stat.suffix}</span>}
+                </div>
+              </div>
+            ))}
+            <div className="bg-surface2/50 p-3 rounded-xl border border-border/50 col-span-2 flex flex-col gap-1.5">
+              <span className="text-muted text-[9px] uppercase font-bold tracking-wider">Titles</span>
+              <div className="flex flex-col gap-2 mt-1">
                 {masterTitles.length > 0 ? (
                   masterTitles.map((title, i) => (
-                    <span key={i} className="text-xs font-black text-white flex items-center gap-1">
-                      🏆 {title}
+                    <span key={i} className="text-xs font-bold text-primary flex items-center gap-2">
+                      <Trophy size={14} className="text-muted" /> {title.replace('🏆 ', '')}
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-secondary/60 italic">None yet</span>
+                  <span className="text-xs text-muted font-medium italic">None yet</span>
                 )}
               </div>
             </div>
@@ -959,21 +986,24 @@ export default function Dashboard() {
         </Card>
 
         {/* 7. Weakest Path & Recommendation */}
-        <Card className="border border-[#FF4A4A]/25 bg-[#FF4A4A]/5">
-          <CardLabel className="text-[#FF4A4A]">Weakest Path & Recommended Next Training</CardLabel>
-          <div className="mt-2 flex flex-col gap-1.5">
+        <Card className="border-danger/30 bg-danger/5">
+          <CardLabel className="text-danger">Weakest Path & Recommended Next Training</CardLabel>
+          <div className="mt-4 flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <span className="text-white font-bold text-sm">{weakestPathInfo.name}</span>
-              <span className="text-xs font-bold text-[#FF4A4A] bg-[#FF4A4A]/10 px-2.5 py-0.5 rounded-lg border border-[#FF4A4A]/20">{weakestPathInfo.avg}%</span>
+              <span className="text-primary font-bold text-base tracking-tight">{weakestPathInfo.name}</span>
+              <div className="flex items-baseline gap-0.5 bg-danger/10 px-2.5 py-1 rounded-lg">
+                <span className="text-sm font-mono font-bold text-danger tabular-nums">{weakestPathInfo.avg}</span>
+                <span className="text-[10px] font-bold text-danger/80">%</span>
+              </div>
             </div>
-            <div className="border-t border-[#FF4A4A]/15 pt-2 mt-1.5 flex flex-col gap-1">
-              <span className="text-[9px] text-secondary uppercase font-bold tracking-wider mb-1">Recommended Next Training</span>
+            <div className="border-t border-danger/20 pt-4 mt-1 flex flex-col gap-3">
+              <span className="text-[9px] text-danger/70 uppercase font-bold tracking-wider">Recommended Next Training</span>
               {recommendedToday.map((rec, i) => (
-                <div key={rec.name || i} className="flex justify-between items-center text-xs py-0.5">
-                  <span className="text-white font-semibold flex items-center gap-1.5">
-                    <span className="text-[9px] text-accent">●</span> {rec.name}
+                <div key={rec.name || i} className="flex justify-between items-center text-xs py-1">
+                  <span className="text-primary font-medium flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-danger/50" /> {rec.name}
                   </span>
-                  <span className="text-secondary/70 font-mono text-[10px]">{rec.mastery_req}</span>
+                  <span className="text-muted font-mono text-[10px] font-medium">{rec.mastery_req}</span>
                 </div>
               ))}
             </div>
@@ -981,73 +1011,74 @@ export default function Dashboard() {
         </Card>
 
         {/* 8. Overall Completion Progress */}
-        <Card className="bg-[#121221]/90">
-          <CardLabel>Overall Completion</CardLabel>
-          <div className="flex items-center gap-6 mt-2">
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="relative w-16 h-16 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="32" cy="32" r="28" className="stroke-[#19192C]" strokeWidth="5.5" fill="transparent" />
-                  <circle cx="32" cy="32" r="28" className="stroke-accent" strokeWidth="5.5" fill="transparent"
-                    strokeDasharray={175.9}
-                    strokeDashoffset={175.9 - (175.9 * overallAverage) / 100}
-                  />
-                </svg>
-                <span className="absolute text-sm font-black text-white">{overallAverage}%</span>
+        <Card className="bg-surface1">
+          <CardLabel>Overall Completion Progress</CardLabel>
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex justify-between items-baseline mb-1">
+              <span className="text-[10px] text-primary font-bold uppercase tracking-wider">Total Guild Mastery</span>
+              <div className="flex items-baseline gap-1 text-[10px]">
+                <span className="font-mono font-bold text-accent tabular-nums text-sm">{overallAverage}</span>
+                <span className="font-bold text-accent/80 uppercase tracking-wider">%</span>
               </div>
-              <span className="text-[8px] text-secondary font-bold uppercase tracking-wider mt-1">{masteredCount} / {totalExercises} Mastered</span>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
-                <span className="text-[9px] text-secondary block uppercase">Learned</span>
-                <span className="text-sm font-bold text-white mt-0.5 block">{learnedCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
-              </div>
-              <div className="bg-surface2/30 p-2 rounded-xl border border-border/10">
-                <span className="text-[9px] text-secondary block uppercase">Mastered</span>
-                <span className="text-sm font-bold text-accent mt-0.5 block">{masteredCount} <span className="text-secondary text-[10px] font-normal">/ {totalExercises}</span></span>
-              </div>
+            <ProgressBar value={overallAverage} color="var(--accent)" height={6} />
+            <div className="flex justify-between items-center text-[10px] text-muted mt-2 font-medium">
+              <span>{totalExercises - masteredCount} exercises remaining</span>
+              <span className="flex items-center gap-1"><Check size={12} className="text-success" /> {masteredCount} mastered</span>
             </div>
           </div>
         </Card>
 
         {/* 10. Cross-Book Master Tech Chain */}
-        <Card>
+        <Card className="bg-surface1">
           <CardLabel>Cross-Book Master Tech Chain</CardLabel>
-          <div className="flex flex-col gap-2.5 mt-2">
+          <div className="flex flex-col gap-2 mt-3">
             
             {/* Legs */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=legs")}>
-              <span className="text-secondary font-semibold">Leg Master</span>
+            <div className="flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=legs")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" /> Leg Master
+              </span>
               {renderTechStatus("legs", legsAvg, false)}
             </div>
 
             {/* Push */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=push")}>
-              <span className="text-secondary font-semibold">Push Master</span>
+            <div className="flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=push")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" /> Push Master
+              </span>
               {renderTechStatus("push", pushAvg, false)}
             </div>
 
             {/* Pull */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=pull")}>
-              <span className="text-secondary font-semibold">Pull Master</span>
+            <div className="flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=pull")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" /> Pull Master
+              </span>
               {renderTechStatus("pull", pullAvg, false)}
             </div>
 
             {/* Core */}
-            <div className="flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl hover:border-accent/40 transition-all cursor-pointer" onClick={() => router.push("/calisthenics?book=core")}>
-              <span className="text-secondary font-semibold">Core Master</span>
+            <div className="flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl hover:border-accent/40 transition-colors cursor-pointer" onClick={() => router.push("/calisthenics?book=core")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent" /> Core Master
+              </span>
               {renderTechStatus("core", coreAvg, false)}
             </div>
 
             {/* Skills */}
-            <div className={`flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl transition-all ${skillsLocked ? 'opacity-70 cursor-not-allowed' : 'hover:border-accent/40 cursor-pointer'}`} onClick={() => !skillsLocked && router.push("/calisthenics?book=skills")}>
-              <span className="text-secondary font-semibold">Skills Master</span>
+            <div className={`flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl transition-colors ${skillsLocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-accent/40 cursor-pointer'}`} onClick={() => !skillsLocked && router.push("/calisthenics?book=skills")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                {skillsLocked ? <Lock size={12} className="text-muted" /> : <div className="w-1.5 h-1.5 rounded-full bg-accent" />} Skills Master
+              </span>
               {renderTechStatus("skills", skillsAvg, skillsLocked)}
             </div>
 
             {/* Elite */}
-            <div className={`flex justify-between items-center text-xs bg-surface2/20 px-3.5 py-2.5 border border-border/15 rounded-xl transition-all ${eliteLocked ? 'opacity-70 cursor-not-allowed' : 'hover:border-accent/40 cursor-pointer'}`} onClick={() => !eliteLocked && router.push("/calisthenics?book=elite")}>
-              <span className="text-secondary font-semibold">Elite Master</span>
+            <div className={`flex justify-between items-center text-xs bg-surface2/50 px-4 py-3 border border-border/50 rounded-xl transition-colors ${eliteLocked ? 'opacity-50 cursor-not-allowed' : 'hover:border-accent/40 cursor-pointer'}`} onClick={() => !eliteLocked && router.push("/calisthenics?book=elite")}>
+              <span className="text-primary font-medium flex items-center gap-2">
+                {eliteLocked ? <Lock size={12} className="text-muted" /> : <div className="w-1.5 h-1.5 rounded-full bg-accent" />} Elite Master
+              </span>
               {renderTechStatus("elite", eliteAvg, eliteLocked)}
             </div>
 

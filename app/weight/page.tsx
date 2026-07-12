@@ -4,8 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
-import { Card, CardLabel } from "@/components/ui/Card";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
+import { Card, CardInner, CardLabel } from "@/components/ui/Card";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from "recharts";
+import { ChevronLeft, Scale } from "lucide-react";
 import { ASVAND_PROFILE_ID } from "@/lib/appConfig";
 import { getLocalDateString } from "@/lib/dateUtils";
 
@@ -138,93 +139,165 @@ export default function AsvandWeightPage() {
   }
 
   return (
-    <div className="page" style={{ background: "var(--bg)" }}>
+    <div className="page">
       <div className="page-content pb-24">
         {/* Back navigation & Title */}
-        <div className="flex items-center gap-3 mb-2 pt-2">
+        <div className="flex items-center gap-4 mb-6 pt-2">
           <button
             onClick={() => router.push("/")}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#1A1A1A] border border-[#2A2A2A] text-white active:scale-95 transition-all"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface1 border border-border text-primary active:scale-95 transition-all hover:bg-surface2 cursor-pointer shadow-sm"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+            <ChevronLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-white">Weight Tracker</h1>
+          <h1 className="text-2xl font-black text-primary tracking-tight">Weight Tracker</h1>
         </div>
 
-        {/* Current Weight Card */}
-        <Card>
-          <CardLabel>Current Weight</CardLabel>
-          <span className="value-lg text-success">{latestWeight ? `${latestWeight} kg` : "—"}</span>
-        </Card>
+        <div className="flex flex-col gap-5">
+          {/* Current Weight Card */}
+          <Card className="bg-surface1 overflow-hidden relative">
+            <CardInner className="flex items-center gap-5 p-5 z-10 relative">
+              <div className="w-14 h-14 rounded-2xl bg-accent/10 border-2 border-accent/20 flex items-center justify-center text-accent shadow-[0_0_15px_rgba(74,158,255,0.15)]">
+                <Scale size={24} />
+              </div>
+              <div>
+                <span className="text-[10px] text-muted font-bold tracking-wider uppercase block mb-1">Current Weight</span>
+                <div className="text-4xl font-black text-primary tabular-nums tracking-tight leading-none">
+                  {latestWeight ? `${latestWeight} ` : "—"}
+                  {latestWeight && <span className="text-base text-muted font-bold ml-1 tracking-normal">kg</span>}
+                </div>
+              </div>
+            </CardInner>
+            {/* Ambient Background Glow */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none" />
+          </Card>
 
-        {/* Graph Card */}
-        <Card>
-          <div className="flex justify-between items-center mb-4">
-            <CardLabel>History Trend</CardLabel>
-            {/* Filter Buttons */}
-            <div className="flex gap-1.5 border border-[#2A2A2A] rounded-xl p-1 bg-[#111111]">
-              {(["3m", "1y", "all"] as const).map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setFilter(opt)}
-                  className={`text-[10px] font-black uppercase px-2.5 py-1.5 rounded-lg transition-all ${
-                    filter === opt ? "bg-accent text-black shadow" : "text-secondary hover:text-white"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
+          {/* Graph Card */}
+          <Card className="px-0 pt-5 pb-0 bg-surface1">
+            <div className="flex justify-between items-center px-5 mb-6">
+              <span className="text-[10px] text-muted font-bold tracking-wider uppercase">History Trend</span>
+              {/* Filter Buttons */}
+              <div className="flex gap-1 border border-border/50 rounded-lg p-1 bg-surface2/50">
+                {(["3m", "1y", "all"] as const).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setFilter(opt)}
+                    className={`text-[9px] font-bold uppercase px-3 py-1.5 rounded-md transition-colors tabular-nums tracking-wider ${
+                      filter === opt ? "bg-accent text-background shadow-[0_0_10px_rgba(74,158,255,0.2)]" : "text-muted hover:text-primary hover:bg-surface3/50"
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {chartData.length > 1 ? (
-            <div style={{ width: "100%", height: "180px" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
-                  <XAxis dataKey="date" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={9} domain={["auto", "auto"]} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={{ background: "#111111", borderColor: "#2A2A2A" }} />
-                  <Line type="monotone" dataKey="weight_kg" stroke="#4A9EFF" strokeWidth={2} dot={true} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-xs text-secondary italic py-8 text-center">Add more weight logs to see trend chart</p>
-          )}
-        </Card>
+            {chartData.length > 1 ? (
+              <div style={{ width: "100%", height: "240px" }} className="mt-2 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorWeight" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4A9EFF" stopOpacity={0.2}/>
+                        <stop offset="100%" stopColor="#4A9EFF" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#888888" 
+                      fontSize={9}
+                      fontWeight="bold"
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(val) => {
+                        const date = new Date(val);
+                        return `${date.getMonth()+1}/${date.getDate()}`;
+                      }}
+                      dy={10}
+                      className="font-mono uppercase tracking-wider"
+                      opacity={0.5}
+                    />
+                    <YAxis 
+                      stroke="#888888" 
+                      fontSize={9}
+                      fontWeight="bold"
+                      domain={['dataMin - 1', 'dataMax + 1']} 
+                      tickLine={false} 
+                      axisLine={false}
+                      tickCount={5}
+                      dx={-10}
+                      className="font-mono uppercase tracking-wider"
+                      opacity={0.5}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        background: "rgba(10, 10, 15, 0.95)", 
+                        borderColor: "rgba(255,255,255,0.05)", 
+                        borderRadius: "12px",
+                        backdropFilter: "blur(12px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                        padding: "12px 16px"
+                      }} 
+                      itemStyle={{ color: "#fff", fontSize: "14px", fontWeight: "900", fontFamily: "monospace" }}
+                      labelStyle={{ color: "#888", fontSize: "9px", textTransform: "uppercase", fontWeight: "bold", marginBottom: "6px", letterSpacing: "0.05em" }}
+                      formatter={(value: any) => [`${value} kg`, 'WEIGHT']}
+                      labelFormatter={(label) => {
+                        const date = new Date(label);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                      }}
+                      cursor={{ stroke: 'rgba(74,158,255,0.2)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="weight_kg" 
+                      stroke="#4A9EFF" 
+                      strokeWidth={2}
+                      activeDot={{ r: 4, fill: "#4A9EFF", stroke: "#0A0A0F", strokeWidth: 2 }}
+                      fill="url(#colorWeight)" 
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="py-16 flex flex-col items-center justify-center border-t border-border/30 mx-5 mt-4">
+                <span className="text-muted text-[10px] font-bold uppercase tracking-wider">No trend data</span>
+              </div>
+            )}
+          </Card>
 
-        {/* Input Form */}
-        <Card>
-          <CardLabel>Log weight today</CardLabel>
-          <form onSubmit={handleLogWeight} className="flex gap-2 mt-2">
-            <input
-              type="number"
-              step="0.1"
-              required
-              placeholder="e.g. 71.2"
-              value={weightInput}
-              onChange={(e) => setWeightInput(e.target.value)}
-              className="flex-1 bg-[#111111] py-2.5 px-3 border border-[#2A2A2A] rounded-xl text-sm font-semibold text-white focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn btn-primary py-2.5 text-xs font-bold"
-            >
-              {submitting ? "Saving..." : "Save"}
-            </button>
-          </form>
-          {submitStatus && (
-            <p className={`text-xs font-bold mt-2 ${submitStatus.type === "success" ? "text-success" : "text-danger"}`}>
-              {submitStatus.msg}
-            </p>
-          )}
-        </Card>
+          {/* Input Form */}
+          <Card className="bg-surface1 p-5 border-border shadow-sm">
+            <span className="text-[10px] text-muted font-bold tracking-wider uppercase block mb-3">Log weight today</span>
+            <form onSubmit={handleLogWeight} className="flex gap-3">
+              <input
+                type="number"
+                step="0.1"
+                required
+                placeholder="e.g. 71.2"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
+                className="flex-1 bg-surface2 py-3 px-4 border border-border/50 rounded-xl text-sm font-bold text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all tabular-nums placeholder:text-muted/50"
+              />
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`px-8 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  submitting 
+                    ? "bg-surface2 text-muted cursor-not-allowed" 
+                    : "bg-accent text-background hover:bg-accent/90 active:scale-95 shadow-[0_0_15px_rgba(74,158,255,0.2)]"
+                }`}
+              >
+                {submitting ? "Saving" : "Save"}
+              </button>
+            </form>
+            {submitStatus && (
+              <p className={`text-[10px] font-bold uppercase tracking-wider mt-3 px-2 ${submitStatus.type === "success" ? "text-success" : "text-danger"}`}>
+                {submitStatus.msg}
+              </p>
+            )}
+          </Card>
+        </div>
       </div>
-
       <NavBar />
     </div>
   );

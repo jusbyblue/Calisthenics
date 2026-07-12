@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { LayoutDashboard, Target, Trophy, Scale, Ruler } from "lucide-react";
 
 export function NavBar() {
   const router = useRouter();
@@ -12,62 +13,56 @@ export function NavBar() {
       id: "dashboard",
       label: "Dashboard",
       path: "/",
-      icon: (
-        <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="9" />
-          <rect x="14" y="3" width="7" height="5" />
-          <rect x="14" y="12" width="7" height="9" />
-          <rect x="3" y="16" width="7" height="5" />
-        </svg>
-      ),
+      icon: LayoutDashboard,
     },
     {
       id: "calisthenics",
       label: "Skill Tree",
       path: "/calisthenics",
-      icon: (
-        <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
+      icon: Target,
     },
     {
       id: "pr",
       label: "PR",
       path: "/pr",
-      icon: (
-        <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="7" />
-          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-        </svg>
-      ),
+      icon: Trophy,
+    },
+    {
+      id: "weight",
+      label: "Weight",
+      path: "/weight",
+      icon: Scale,
     },
     {
       id: "measurements",
       label: "Specs",
       path: "/measurements",
-      icon: (
-        <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M10 2v20M14 2v20M2 12h20M2 6h20M2 18h20" />
-        </svg>
-      ),
+      icon: Ruler,
     },
   ];
 
   return (
-    <nav className="bottom-nav">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-t border-border/50 z-50 flex justify-around items-center px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {navItems.map((item) => {
         const active = pathname === item.path;
+        const Icon = item.icon;
         return (
           <button
             key={item.id}
             onClick={() => router.push(item.path)}
-            className={`nav-item ${active ? "active" : ""}`}
+            className="flex flex-col items-center justify-center p-2 rounded-xl transition-all cursor-pointer group min-w-[64px]"
+            aria-label={item.label}
           >
-            {item.icon}
-            <span>{item.label}</span>
+            <div className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-colors ${active ? "bg-accent/10" : "group-hover:bg-surface1"}`}>
+              <Icon 
+                size={22} 
+                strokeWidth={active ? 2.5 : 2} 
+                className={`transition-colors duration-200 ${active ? "text-accent" : "text-muted group-hover:text-primary"}`} 
+              />
+            </div>
+            <span className={`text-[9px] mt-1 font-bold tracking-wider uppercase transition-colors ${active ? "text-primary" : "text-muted group-hover:text-primary"}`}>
+              {item.label}
+            </span>
           </button>
         );
       })}

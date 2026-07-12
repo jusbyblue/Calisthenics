@@ -2,13 +2,23 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Calisthenics Athlete Platform",
+  title: "Calisthenics Guild",
   description: "A premium athlete progression and skill tree platform.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Calisthenics",
+    title: "Guild",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/favicon.png",
   },
 };
 
@@ -35,7 +45,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="bg-bg text-primary antialiased">{children}</body>
+      <body className="bg-background text-primary antialiased selection:bg-accent/30 selection:text-accent">
+        {children}
+      </body>
     </html>
   );
 }

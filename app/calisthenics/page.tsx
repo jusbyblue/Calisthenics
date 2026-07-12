@@ -4,8 +4,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { NavBar } from "@/components/ui/NavBar";
-import { Card } from "@/components/ui/Card";
+import { Card, CardInner, CardLabel } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { ChevronLeft, ChevronRight, Lock, Book, Zap, Target, Trophy, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
 import {
   GUILD_CATALOG,
   LEG_PATHS,
@@ -369,20 +370,20 @@ export default function AsvandCalisthenicsPage() {
   };
 
   const bookOptions = [
-    { key: "legs", name: "Leg Mastery", emoji: "📕", avg: legsAvg, locked: false },
-    { key: "push", name: "Push Mastery", emoji: "📘", avg: pushAvg, locked: false },
-    { key: "pull", name: "Pull Mastery", emoji: "📙", avg: pullAvg, locked: false },
-    { key: "core", name: "Core Mastery", emoji: "📗", avg: coreAvg, locked: false },
-    { key: "skills", name: "Skill & Balance", emoji: "📕", avg: skillsAvg, locked: skillsLocked },
-    { key: "elite", name: "Elite Skills", emoji: "📘", avg: eliteAvg, locked: eliteLocked }
+    { key: "legs", name: "Leg Mastery", avg: legsAvg, locked: false },
+    { key: "push", name: "Push Mastery", avg: pushAvg, locked: false },
+    { key: "pull", name: "Pull Mastery", avg: pullAvg, locked: false },
+    { key: "core", name: "Core Mastery", avg: coreAvg, locked: false },
+    { key: "skills", name: "Skill & Balance", avg: skillsAvg, locked: skillsLocked },
+    { key: "elite", name: "Elite Skills", avg: eliteAvg, locked: eliteLocked }
   ] as const;
 
   return (
-    <div className="page pb-24" style={{ background: "radial-gradient(circle at top, #111322 0%, #0A0A0F 100%)" }}>
+    <div className="page pb-24">
       <div className="page-content">
         
         {/* Navigation & Header */}
-        <div className="flex items-center gap-3 mb-4 pt-2">
+        <div className="flex items-center gap-3 mb-6 pt-2">
           <button
             onClick={() => {
               if (activeBook) {
@@ -391,83 +392,70 @@ export default function AsvandCalisthenicsPage() {
                 router.push("/");
               }
             }}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#14141E] border border-border/30 text-white active:scale-95 transition-all hover:bg-[#1E1E2C] hover:border-border"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-surface1 border border-border text-primary active:scale-95 transition-all hover:bg-surface2 cursor-pointer"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+            <ChevronLeft size={20} />
           </button>
-          <h1 className="text-xl font-black text-white tracking-wide uppercase">
+          <h1 className="text-xl font-bold text-primary tracking-tight">
             {activeBook ? bookOptions.find(b => b.key === activeBook)?.name : "Calisthenics Guild"}
           </h1>
         </div>
 
         {activeBook === null ? (
           // Main Books Selection Screen
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             
             {/* Dynamic Level & XP Progress Meter */}
-            <Card className="relative overflow-hidden border-arctic/20 bg-[#101018]/90 backdrop-blur-xl">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-arctic/10 rounded-full blur-3xl" />
-              <div className="flex flex-col sm:flex-row items-center gap-4 relative z-10 p-2">
-                <div className="w-16 h-16 rounded-full border-4 border-dashed border-arctic/40 flex flex-col items-center justify-center bg-arctic/10 shadow-[0_0_15px_rgba(74,158,255,0.2)]">
-                  <span className="text-[10px] text-secondary font-bold uppercase leading-none">Level</span>
-                  <span className="text-2xl font-black text-white leading-none mt-1">{levelInfo.level}</span>
+            <Card className="relative overflow-hidden bg-surface1">
+              <div className="flex flex-col sm:flex-row items-center gap-5 relative z-10 p-2">
+                <div className="w-16 h-16 rounded-full border-2 border-accent/80 flex flex-col items-center justify-center bg-accent/5 shadow-[0_0_15px_rgba(74,158,255,0.15)]">
+                  <span className="text-[9px] text-accent font-bold uppercase leading-none tracking-wider mb-1">Level</span>
+                  <span className="text-2xl font-black text-primary leading-none tabular-nums">{levelInfo.level}</span>
                 </div>
                 
-                <div className="flex-1 w-full text-center sm:text-left">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <span className="text-xs font-bold text-white tracking-wide uppercase">{levelInfo.title}</span>
-                    <span className="text-xs font-mono font-bold text-arctic">
-                      {levelInfo.currentXp.toLocaleString()} <span className="text-secondary">/</span> {levelInfo.nextLevelXp.toLocaleString()} XP
+                <div className="flex-1 w-full text-center sm:text-left mt-1 sm:mt-0">
+                  <div className="flex justify-between items-baseline mb-3">
+                    <span className="text-sm font-bold text-primary tracking-wide">{levelInfo.title}</span>
+                    <span className="text-xs font-mono font-bold text-accent">
+                      <span className="tabular-nums">{levelInfo.currentXp.toLocaleString()}</span> <span className="text-muted font-sans font-medium px-1">/</span> <span className="tabular-nums">{levelInfo.nextLevelXp.toLocaleString()}</span> <span className="text-[10px] uppercase font-bold tracking-wider ml-1 text-accent/80">XP</span>
                     </span>
                   </div>
-                  <div className="xp-bar h-2.5 bg-[#1B1B29] rounded-full overflow-hidden">
-                    <div
-                      className="xp-bar-fill h-full transition-all duration-500 rounded-full"
-                      style={{
-                        width: `${levelInfo.progress}%`,
-                        background: `linear-gradient(90deg, rgba(74,158,255,0.6), rgba(74,158,255,1))`,
-                        boxShadow: `0 0 10px rgba(74,158,255,0.5)`,
-                      }}
-                    />
-                  </div>
+                  <ProgressBar value={levelInfo.progress} color="var(--accent)" height={6} />
                 </div>
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
               {bookOptions.map((book) => (
                 <button
                   key={book.key}
                   disabled={book.locked}
                   onClick={() => setActiveBook(book.key)}
-                  className={`p-5 rounded-2xl border text-left flex flex-col gap-3 transition-all relative overflow-hidden ${
+                  className={`p-5 rounded-2xl border text-left flex flex-col gap-4 transition-colors relative overflow-hidden ${
                     book.locked
-                      ? "bg-surface1/20 border-border/10 text-secondary/35 cursor-not-allowed"
-                      : "bg-[#10101C]/90 hover:bg-[#151526]/90 border-border/30 text-white hover:border-arctic/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] cursor-pointer shadow-lg"
+                      ? "bg-surface2/50 border-border/50 text-muted cursor-not-allowed opacity-50"
+                      : "bg-surface1 hover:bg-surface2 hover:border-accent/40 border-border text-primary cursor-pointer shadow-sm"
                   }`}
                 >
-                  {book.locked && (
-                    <div className="absolute top-4 right-4 bg-surface2/80 p-1.5 rounded-lg border border-border/30 text-xs">
-                      🔒 Locked
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${book.locked ? 'bg-surface3 text-muted' : 'bg-accent/10 text-accent'}`}>
+                       {book.locked ? <Lock size={18} /> : <Book size={18} />}
                     </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{book.emoji}</span>
-                    <div>
-                      <h3 className="font-extrabold text-sm tracking-wide">{book.name}</h3>
-                      <p className="text-[10px] text-secondary mt-0.5 font-bold uppercase">
-                        {book.locked ? "Complete base path at 60%" : "Tap to open"}
+                    <div className="flex-1">
+                      <h3 className="font-bold text-base tracking-tight flex items-center justify-between">
+                        {book.name}
+                        {!book.locked && <ChevronRight size={16} className="text-muted" />}
+                      </h3>
+                      <p className="text-[9px] text-muted mt-1 font-bold uppercase tracking-wider">
+                        {book.locked ? "Complete base paths at 60%" : "Tap to train"}
                       </p>
                     </div>
                   </div>
                   {!book.locked && (
-                    <div className="mt-2 w-full">
-                      <div className="flex justify-between text-[10px] text-secondary mb-1">
-                        <span>COMPLETION</span>
-                        <span className="font-mono font-bold text-accent">{book.avg}%</span>
+                    <div className="mt-1 w-full pt-4 border-t border-border/50">
+                      <div className="flex justify-between text-[9px] text-muted mb-2 font-bold uppercase tracking-wider">
+                        <span>Completion</span>
+                        <span className="font-mono font-bold text-accent tabular-nums text-xs">{book.avg}%</span>
                       </div>
                       <ProgressBar value={book.avg} color="var(--accent)" height={4} />
                     </div>
@@ -500,23 +488,27 @@ export default function AsvandCalisthenicsPage() {
               const treeTitle = titleMapping[activeBook as keyof typeof titleMapping] || "Mastery Tree";
 
               return (
-                <Card className="bg-surface1/40 border-border/20 py-4.5 px-5">
-                  <div className="flex justify-between items-center text-xs mb-2">
-                    <span className="font-extrabold text-white uppercase tracking-wider">{treeTitle}</span>
-                    <span className="text-accent font-mono font-bold">{progressVal}% COMPLETE</span>
+                <Card className="bg-surface1 border-border p-5">
+                  <div className="flex justify-between items-end mb-4">
+                    <div>
+                      <span className="text-[10px] text-muted font-bold tracking-wider uppercase block mb-1">Active Tree</span>
+                      <span className="font-black text-xl text-primary tracking-tight">{treeTitle}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-accent font-mono font-bold text-2xl tabular-nums leading-none block">{progressVal}%</span>
+                    </div>
                   </div>
-                  <div className="mb-2">
-                    <ProgressBar value={progressVal} color="var(--accent)" height={6} />
-                  </div>
-                  <div className="text-[10px] text-secondary font-semibold font-mono">
-                    {masteredCount} / {totalCount} Exercises Mastered
+                  <ProgressBar value={progressVal} color="var(--accent)" height={8} />
+                  <div className="mt-3 flex justify-between items-center text-[10px] text-muted font-bold tracking-wider uppercase">
+                    <span>{masteredCount} / {totalCount} Mastered</span>
+                    <span className="text-accent">{progressVal === 100 ? "Complete" : "In Progress"}</span>
                   </div>
                 </Card>
               );
             })()}
 
             {/* List of Exercises */}
-            <div className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-4">
               {GUILD_CATALOG.filter(item => item.path === activeBook).map((ex) => {
                 const exName = ex.name;
                 const isUnlocked = isExerciseUnlocked(exName, activeBook);
@@ -542,47 +534,56 @@ export default function AsvandCalisthenicsPage() {
                   <div
                     key={exName}
                     id={`exercise-card-${exName.replace(/\s+/g, "-")}`}
-                    className={`p-5 rounded-2xl border transition-all ${
+                    className={`p-6 rounded-2xl border transition-colors ${
                       isUnlocked 
-                        ? "bg-surface1 border-border/40 text-white" 
-                        : "bg-[#101018]/30 border-border/10 text-secondary/30 opacity-60"
+                        ? "bg-surface1 border-border text-primary" 
+                        : "bg-surface2/30 border-border/30 text-muted opacity-80"
                     }`}
                   >
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                       {/* Title & Status */}
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-extrabold text-base tracking-wide">{exName}</h3>
+                      <div className="flex items-start justify-between gap-4">
+                        <h3 className="font-bold text-xl tracking-tight text-primary">{exName}</h3>
                         {(() => {
                           if (!isUnlocked) {
-                            return <span className="text-xs text-danger font-bold uppercase tracking-wider">🔒 Locked</span>;
+                            return (
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-surface2 rounded-lg border border-border/50">
+                                <Lock size={12} className="text-muted" />
+                                <span className="text-[9px] text-muted font-bold uppercase tracking-wider">Locked</span>
+                              </div>
+                            );
                           }
                           const mastered = isExerciseMastered(exName);
                           if (mastered) {
-                            return <span className="text-xs text-success font-bold uppercase tracking-wider">✅ Mastered</span>;
+                            return (
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-success/10 rounded-lg border border-success/20">
+                                <CheckCircle2 size={12} className="text-success" />
+                                <span className="text-[9px] text-success font-bold uppercase tracking-wider">Mastered</span>
+                              </div>
+                            );
                           }
                           const masteryPercent = skillProgress?.mastery_percent || 0;
                           return (
-                            <span className="text-xs text-accent font-bold uppercase tracking-wider">
-                              ⚡ {masteryPercent}%
-                            </span>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-accent/10 rounded-lg border border-accent/20">
+                              <Zap size={12} className="text-accent" />
+                              <span className="text-[10px] text-accent font-bold uppercase tracking-wider tabular-nums">{masteryPercent}%</span>
+                            </div>
                           );
                         })()}
                       </div>
 
-                      <div className="divider opacity-30 my-0.5" />
-
                       {isUnlocked && !isExerciseMastered(exName) && (
-                        <div className="mb-1">
+                        <div className="mb-2">
                           <ProgressBar value={skillProgress?.mastery_percent || 0} color="var(--accent)" height={4} />
                         </div>
                       )}
 
                       {!isUnlocked ? (
                         /* Locked Exercise Layout: Show Prerequisite Checklist */
-                        <div className="mt-1">
-                          <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider mb-0.5">Requirements</span>
+                        <div className="mt-1 pt-4 border-t border-border/50">
+                          <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-3">Requirements</span>
                           {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER" || exName === "ELITE MASTER" ? (
-                            <div className="flex flex-col gap-1.5 mt-2">
+                            <div className="flex flex-col gap-3">
                               {Object.keys(
                                 exName === "LEG MASTER" 
                                   ? LEG_PATHS 
@@ -611,9 +612,11 @@ export default function AsvandCalisthenicsPage() {
                                             : "elite"
                                 );
                                 return (
-                                  <div key={pathKey} className="flex items-center gap-2 text-xs">
-                                    <span>{complete ? "✅" : "⬜"}</span>
-                                    <span className={complete ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
+                                  <div key={pathKey} className="flex items-center gap-3 text-xs">
+                                    <span className={complete ? "text-success" : "text-muted"}>
+                                      {complete ? <CheckCircle2 size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-border" />}
+                                    </span>
+                                    <span className={complete ? "text-primary font-bold line-through decoration-success/40" : "text-muted font-medium"}>
                                       {pathKey} Tree
                                     </span>
                                   </div>
@@ -630,27 +633,29 @@ export default function AsvandCalisthenicsPage() {
                               const isOrRelation = !Array.isArray(prereqRules) && prereqRules.type === "or";
                               
                               return (
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[10px] text-secondary/70 block mb-1 font-mono">
-                                    {remaining} {remaining === 1 ? "requirement" : "requirements"} remaining
-                                  </span>
-                                  {isOrRelation && (
-                                    <span className="text-[10px] text-secondary/70 italic block mb-1">
-                                      Complete any one of the following:
+                                  <div className="flex flex-col gap-3">
+                                    <span className="text-[10px] text-muted block font-mono uppercase tracking-wider font-bold">
+                                      {remaining} {remaining === 1 ? "requirement" : "requirements"} remaining
                                     </span>
-                                  )}
-                                  {list.map(prereqName => {
-                                    const mastered = isExerciseMastered(prereqName);
-                                    return (
-                                      <div key={prereqName} className="flex items-center gap-2 text-xs">
-                                        <span>{mastered ? "✅" : "⬜"}</span>
-                                        <span className={mastered ? "text-white font-medium line-through decoration-success/40" : "text-secondary/50"}>
-                                          {prereqName}
-                                        </span>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
+                                    {isOrRelation && (
+                                      <span className="text-[9px] text-accent font-bold uppercase tracking-wider block">
+                                        Complete any one of the following:
+                                      </span>
+                                    )}
+                                    {list.map(prereqName => {
+                                      const mastered = isExerciseMastered(prereqName);
+                                      return (
+                                        <div key={prereqName} className="flex items-center gap-3 text-xs">
+                                          <span className={mastered ? "text-success" : "text-muted"}>
+                                            {mastered ? <CheckCircle2 size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-border" />}
+                                          </span>
+                                          <span className={mastered ? "text-primary font-bold line-through decoration-success/40" : "text-muted font-medium"}>
+                                            {prereqName}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                               );
                             })()
                           )}
@@ -658,11 +663,11 @@ export default function AsvandCalisthenicsPage() {
                       ) : (
                         /* Unlocked Exercise Layout */
                         <>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-2 gap-4 mt-2 pt-5 border-t border-border/50">
                             {/* Mastery Requirement */}
                             <div>
-                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Mastery Requirement</span>
-                              <span className="text-xs font-bold text-white">
+                              <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-2">Requirement</span>
+                              <span className="text-sm font-bold text-primary block leading-snug">
                                 {exName === "LEG MASTER" || exName === "PUSH MASTER" || exName === "PULL MASTER" || exName === "CORE MASTER" || exName === "SKILLS MASTER" || exName === "ELITE MASTER"
                                   ? `Complete all ${
                                       exName === "LEG MASTER" 
@@ -676,21 +681,21 @@ export default function AsvandCalisthenicsPage() {
                                               : exName === "SKILLS MASTER"
                                                 ? "Skills"
                                                 : "Elite"
-                                    } Mastery paths` 
+                                    } paths` 
                                   : ex.mastery_req}
                               </span>
                             </div>
 
                             {/* Best Performance */}
                             <div>
-                              <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Best Performance</span>
-                              <span className="text-xs font-bold text-accent block">
+                              <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-2">Best Performance</span>
+                              <span className="text-sm font-bold text-accent block leading-snug">
                                 {currentPrVal !== null 
                                   ? (skillProgress?.x3_completed ? `3 × ${currentPrVal} ${unit}` : `1 × ${currentPrVal} ${unit}`) 
                                   : "—"}
                               </span>
                               {skillProgress?.best_performance_date && (
-                                <span className="text-[9px] text-secondary/50 block font-mono mt-0.5">
+                                <span className="text-[10px] text-muted font-bold block mt-1">
                                   {(() => {
                                     try {
                                       return new Date(skillProgress.best_performance_date).toLocaleDateString("en-US", {
@@ -723,36 +728,36 @@ export default function AsvandCalisthenicsPage() {
                               if (directUnlocks.length === 0 && contributesTo.length === 0) return null;
 
                               return (
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                                   {/* Direct Unlocks */}
                                   {directUnlocks.length > 0 && (
                                     <div>
-                                      <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Unlocks</span>
-                                      <div className="mt-1 flex flex-col gap-1">
+                                      <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-2">Unlocks</span>
+                                      <div className="flex flex-col gap-2">
                                         {directUnlocks.map(unlockEx => {
                                           const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
                                           return (
-                                            <div key={unlockEx.name} className="flex items-center gap-1.5 text-xs">
-                                              <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
-                                                {isUnlockExUnlocked ? "✓" : "•"}
+                                            <div key={unlockEx.name} className="flex items-center gap-2.5 text-xs">
+                                              <span className={isUnlockExUnlocked ? "text-success" : "text-muted"}>
+                                                {isUnlockExUnlocked ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-border" />}
                                               </span>
                                               <button
                                                 onClick={() => {
                                                   const targetEl = document.getElementById(`exercise-card-${unlockEx.name.replace(/\s+/g, "-")}`);
                                                   if (targetEl) {
                                                     targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0A0A0F]");
                                                     setTimeout(() => {
-                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0A0A0F]");
                                                     }, 2000);
                                                   }
                                                 }}
-                                                className={`text-left font-medium hover:underline hover:cursor-pointer flex items-center gap-0.5 ${
-                                                  isUnlockExUnlocked ? "text-accent" : "text-secondary/40"
+                                                className={`text-left font-bold hover:underline hover:cursor-pointer flex items-center gap-1.5 transition-colors ${
+                                                  isUnlockExUnlocked ? "text-accent" : "text-muted"
                                                 }`}
                                               >
                                                 <span>{unlockEx.name}</span>
-                                                <span className="text-[9px] opacity-80 font-bold">→</span>
+                                                <ArrowRight size={12} className="opacity-80" />
                                               </button>
                                             </div>
                                           );
@@ -764,32 +769,32 @@ export default function AsvandCalisthenicsPage() {
                                   {/* Contributes To */}
                                   {contributesTo.length > 0 && (
                                     <div>
-                                      <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Contributes To</span>
-                                      <div className="mt-1 flex flex-col gap-1">
+                                      <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-2">Builds To</span>
+                                      <div className="flex flex-col gap-2">
                                         {contributesTo.map(unlockEx => {
                                           const isUnlockExUnlocked = isExerciseUnlocked(unlockEx.name);
                                           return (
-                                            <div key={unlockEx.name} className="flex items-center gap-1.5 text-xs">
-                                              <span className={isUnlockExUnlocked ? "text-success font-bold" : "text-secondary/30"}>
-                                                {isUnlockExUnlocked ? "✓" : "•"}
+                                            <div key={unlockEx.name} className="flex items-center gap-2.5 text-xs">
+                                              <span className={isUnlockExUnlocked ? "text-success" : "text-muted"}>
+                                                {isUnlockExUnlocked ? <CheckCircle2 size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-border" />}
                                               </span>
                                               <button
                                                 onClick={() => {
                                                   const targetEl = document.getElementById(`exercise-card-${unlockEx.name.replace(/\s+/g, "-")}`);
                                                   if (targetEl) {
                                                     targetEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                    targetEl.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0A0A0F]");
                                                     setTimeout(() => {
-                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0d0d12]");
+                                                      targetEl.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-[#0A0A0F]");
                                                     }, 2000);
                                                   }
                                                 }}
-                                                className={`text-left font-medium hover:underline hover:cursor-pointer flex items-center gap-0.5 ${
-                                                  isUnlockExUnlocked ? "text-accent" : "text-secondary/40"
+                                                className={`text-left font-bold hover:underline hover:cursor-pointer flex items-center gap-1.5 transition-colors ${
+                                                  isUnlockExUnlocked ? "text-accent" : "text-muted"
                                                 }`}
                                               >
                                                 <span>{unlockEx.name}</span>
-                                                <span className="text-[9px] opacity-80 font-bold">→</span>
+                                                <ArrowRight size={12} className="opacity-80" />
                                               </button>
                                             </div>
                                           );
@@ -802,10 +807,10 @@ export default function AsvandCalisthenicsPage() {
                             })()
                           ) : (
                             /* MASTER Special Display */
-                            <div className="flex flex-col gap-2.5">
+                            <div className="flex flex-col gap-4 mt-5 pt-5 border-t border-border/50">
                               <div>
-                                <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Prerequisite Branches</span>
-                                <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                                <span className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-3">Prerequisite Branches</span>
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                                   {Object.keys(
                                     exName === "LEG MASTER" 
                                       ? LEG_PATHS 
@@ -834,11 +839,11 @@ export default function AsvandCalisthenicsPage() {
                                                 : "elite"
                                     );
                                     return (
-                                      <div key={pathKey} className="flex items-center gap-1 text-xs">
-                                        <span className={complete ? "text-success font-bold" : "text-secondary/30"}>
-                                          {complete ? "✓" : "•"}
+                                      <div key={pathKey} className="flex items-center gap-3 text-sm">
+                                        <span className={complete ? "text-success" : "text-muted"}>
+                                          {complete ? <CheckCircle2 size={16} /> : <div className="w-4 h-4 rounded-full border-2 border-border" />}
                                         </span>
-                                        <span className={complete ? "text-white font-medium" : "text-secondary/40"}>
+                                        <span className={complete ? "text-primary font-bold" : "text-muted font-medium"}>
                                           {pathKey} Tree
                                         </span>
                                       </div>
@@ -847,56 +852,56 @@ export default function AsvandCalisthenicsPage() {
                                 </div>
                               </div>
                               
-                              <div className="mt-1.5 p-3 rounded-xl bg-accent/5 border border-accent/20">
-                                <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Reward</span>
-                                <div className="mt-1 flex flex-col gap-1 text-xs text-white/95 font-medium">
-                                  <span>🏆 {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : exName === "PULL MASTER" ? "Pull Master" : exName === "CORE MASTER" ? "Core Master" : exName === "SKILLS MASTER" ? "Skills Master" : "Elite Master"} Title</span>
-                                  <span>⚡ +500 XP</span>
-                                  <span>📚 Book Complete</span>
-                                  <span>📜 Certificate Unlocked</span>
+                              <div className="mt-3 p-4 rounded-2xl bg-surface2/50 border border-border/50">
+                                <span className="text-[9px] text-accent block uppercase font-bold tracking-wider mb-3">Reward</span>
+                                <div className="flex flex-col gap-2.5 text-sm text-primary font-bold">
+                                  <span className="flex items-center gap-2"><Trophy size={16} className="text-accent" /> {exName === "LEG MASTER" ? "Leg Master" : exName === "PUSH MASTER" ? "Push Master" : exName === "PULL MASTER" ? "Pull Master" : exName === "CORE MASTER" ? "Core Master" : exName === "SKILLS MASTER" ? "Skills Master" : "Elite Master"} Title</span>
+                                  <span className="flex items-center gap-2"><Zap size={16} className="text-accent" /> +500 XP</span>
+                                  <span className="flex items-center gap-2"><Book size={16} className="text-accent" /> Book Complete</span>
+                                  <span className="flex items-center gap-2"><ShieldCheck size={16} className="text-accent" /> Certificate Unlocked</span>
                                 </div>
                               </div>
                             </div>
                           )}
 
                           {/* Log Training Input Container */}
-                          <div className="mt-3 bg-[#13131c] p-3.5 rounded-xl border border-border/20 flex flex-col gap-2.5">
-                            <span className="text-[9px] text-accent block uppercase font-bold tracking-wider">Log Training</span>
+                          <div className="mt-5 bg-surface1 p-5 rounded-2xl border border-border flex flex-col gap-4 shadow-sm">
+                            <span className="text-[10px] text-accent block uppercase font-bold tracking-wider">Log Training</span>
                             
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 gap-4">
                               {/* Sets Input */}
                               <div>
-                                <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Sets</label>
+                                <label className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-1.5">Sets</label>
                                 <input
                                   type="number"
                                   placeholder="Sets"
                                   defaultValue="3"
                                   id={`input-sets-${exName}`}
-                                  className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                  className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm text-primary text-center font-mono font-bold focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                                 />
                               </div>
 
                               {/* Primary Input (Reps or Seconds) */}
                               {exerciseType === "duration" ? (
                                 <div>
-                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Seconds</label>
+                                  <label className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-1.5">Seconds</label>
                                   <input
                                     type="number"
                                     placeholder="Sec"
                                     defaultValue=""
                                     id={`input-value-${exName}`}
-                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                    className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm text-primary text-center font-mono font-bold focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                                   />
                                 </div>
                               ) : (
                                 <div>
-                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Reps</label>
+                                  <label className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-1.5">Reps</label>
                                   <input
                                     type="number"
                                     placeholder="Reps"
                                     defaultValue=""
                                     id={`input-value-${exName}`}
-                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                    className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm text-primary text-center font-mono font-bold focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                                   />
                                 </div>
                               )}
@@ -904,13 +909,13 @@ export default function AsvandCalisthenicsPage() {
                               {/* Secondary Input (Weight) */}
                               {exerciseType === "weighted_reps" && (
                                 <div>
-                                  <label className="text-[8px] text-secondary block uppercase font-semibold mb-0.5">Weight (kg)</label>
+                                  <label className="text-[9px] text-muted block uppercase font-bold tracking-wider mb-1.5">Weight (kg)</label>
                                   <input
                                     type="number"
                                     placeholder="Weight"
                                     defaultValue=""
                                     id={`input-weight-${exName}`}
-                                    className="w-full bg-[#181825] py-1 px-1.5 border border-border/30 rounded-lg text-xs text-white text-center font-mono font-bold focus:outline-none focus:border-accent"
+                                    className="w-full bg-surface2 py-2 px-3 border border-border/50 rounded-xl text-sm text-primary text-center font-mono font-bold focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50"
                                   />
                                 </div>
                               )}
@@ -923,12 +928,12 @@ export default function AsvandCalisthenicsPage() {
                                 placeholder="Add training notes (optional)"
                                 defaultValue=""
                                 id={`input-notes-${exName}`}
-                                className="w-full bg-[#181825] py-1.5 px-2.5 border border-border/30 rounded-lg text-xs text-white focus:outline-none focus:border-accent"
+                                className="w-full bg-surface2 py-2.5 px-4 border border-border/50 rounded-xl text-sm text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder:text-muted/50 font-medium"
                               />
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-1.5 mt-0.5">
+                            <div className="flex justify-end gap-3 mt-2">
                               <button
                                 disabled={isLogging}
                                 onClick={async () => {
@@ -963,8 +968,8 @@ export default function AsvandCalisthenicsPage() {
                                     if (inputWeightEl) inputWeightEl.value = "";
                                   }
                                 }}
-                                className={`px-4 py-1.5 text-xs font-bold text-[#000] bg-accent rounded-lg transition-all ${
-                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:filter hover:brightness-110 active:scale-95 cursor-pointer"
+                                className={`px-6 py-2.5 text-[10px] font-bold tracking-wider uppercase bg-accent text-background rounded-xl transition-all ${
+                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:bg-accent/90 active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(74,158,255,0.2)]"
                                 }`}
                               >
                                 {isLogging ? "Logging..." : "Record"}
@@ -998,8 +1003,8 @@ export default function AsvandCalisthenicsPage() {
                                     if (inputWeightEl) inputWeightEl.value = "";
                                   }
                                 }}
-                                className={`px-4 py-1.5 text-xs font-bold text-[#000] bg-success rounded-lg transition-all ${
-                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:filter hover:brightness-110 active:scale-95 cursor-pointer"
+                                className={`px-6 py-2.5 text-[10px] font-bold tracking-wider uppercase bg-success text-background rounded-xl transition-all ${
+                                  isLogging ? "opacity-50 cursor-not-allowed" : "hover:bg-success/90 active:scale-95 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)]"
                                 }`}
                                 title="Log 3 sets at this value"
                               >
