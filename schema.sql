@@ -110,45 +110,12 @@ ALTER TABLE measurements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public access to measurements" 
   ON measurements FOR ALL TO public USING (true) WITH CHECK (true);
 
--- 6. Health Logs Table (for Weight tracking)
-CREATE TABLE IF NOT EXISTS health_logs (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  profile_id  UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  date        DATE NOT NULL DEFAULT CURRENT_DATE,
-  weight_kg   NUMERIC(5,2),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(profile_id, date)
-);
-
--- Enable RLS for health_logs
-ALTER TABLE health_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Allow public access to health_logs" 
-  ON health_logs FOR ALL TO public USING (true) WITH CHECK (true);
-
--- 7. log_health_metric Function (RPC)
-CREATE OR REPLACE FUNCTION log_health_metric(
-  p_profile_id UUID,
-  p_date DATE,
-  p_metric TEXT,
-  p_value NUMERIC
-) RETURNS VOID AS $$
-BEGIN
-  IF p_metric = 'weight_kg' THEN
-    INSERT INTO health_logs (profile_id, date, weight_kg)
-    VALUES (p_profile_id, p_date, p_value)
-    ON CONFLICT (profile_id, date)
-    DO UPDATE SET weight_kg = EXCLUDED.weight_kg;
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
-
--- 8. Seed Default Athlete Profile
+-- 6. Seed Default Athlete Profile
 INSERT INTO profiles (id, role, name)
 VALUES ('7a950f24-2c63-47bf-8fbd-197e88ef2f7b', 'asvand', 'Asvand')
 ON CONFLICT (id) DO NOTHING;
 
--- 9. Hardened get_db_size Function (RPC)
+-- 7. Hardened get_db_size Function (RPC)
 CREATE OR REPLACE FUNCTION public.get_db_size()
 RETURNS BIGINT
 LANGUAGE sql
@@ -165,9 +132,7 @@ REVOKE EXECUTE ON FUNCTION public.get_db_size() FROM PUBLIC;
 -- Grant execution privilege exclusively to the anon client role
 GRANT EXECUTE ON FUNCTION public.get_db_size() TO anon;
 
--- ============================================================
--- PLANNED OPTIMIZATIONS (To be run during database migration phase)
--- ============================================================
--- CREATE INDEX IF NOT EXISTS idx_pr_logs_profile_date ON pr_logs(profile_id, date DESC);
+-- 8. Optimization Indexes
+CREATE INDEX IF NOT EXISTS idx_pr_logs_profile_date ON pr_logs(profile_id, date DESC);
 
 
